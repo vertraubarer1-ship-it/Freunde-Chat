@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Nexus Chat">
-<title>Nexus Chat</title>
+<meta name="apple-mobile-web-app-title" content="Nexus">
+<title>Nexus Rooms & Chat</title>
 <link rel="manifest" href="manifest.json">
 
-<!-- MQTT für kostenlose Live-Echtzeitübertragung -->
+<!-- MQTT Echtzeit-Engine -->
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
 <style>
@@ -17,6 +17,7 @@
     --bg-dark: #0a0f1d;
     --card-bg: rgba(22, 30, 49, 0.85);
     --primary: #6366f1;
+    --primary-hover: #4f46e5;
     --accent: #06b6d4;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
@@ -37,8 +38,8 @@
     overflow: hidden;
   }
 
-  /* LOGIN */
-  #login-screen {
+  /* --- LOBBY SCREEN --- */
+  #lobby-screen {
     position: fixed; inset: 0; z-index: 50;
     background: radial-gradient(circle at center, #1e1b4b 0%, #060911 100%);
     display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -48,51 +49,63 @@
     border: 1px solid rgba(255,255,255,0.12);
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
-    padding: 32px; border-radius: 28px; width: 100%; max-width: 400px;
+    padding: 28px; border-radius: 28px; width: 100%; max-width: 440px;
     box-shadow: 0 25px 60px rgba(0,0,0,0.6);
-    text-align: center;
+    display: flex; flex-direction: column; max-height: 90vh;
   }
-  .card h1 { font-size: 28px; font-weight: 800; margin-bottom: 6px; background: linear-gradient(135deg, #a5b4fc, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .card p { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
-  .input-group { margin-bottom: 14px; text-align: left; }
-  .input-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; margin-left: 4px; }
+  .card h1 { font-size: 26px; font-weight: 800; text-align: center; margin-bottom: 4px; background: linear-gradient(135deg, #a5b4fc, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .card p.sub { font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 18px; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 16px; margin-bottom: 16px; }
+  .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); font-weight: 600; border-radius: 12px; cursor: pointer; transition: 0.2s; font-size: 14px; }
+  .tab-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+
+  .input-group { margin-bottom: 12px; text-align: left; }
+  .input-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; margin-left: 4px; }
   .card input {
-    width: 100%; padding: 14px 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(10, 15, 29, 0.7); color: #fff; font-size: 16px; outline: none; transition: 0.2s;
+    width: 100%; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(10, 15, 29, 0.7); color: #fff; font-size: 15px; outline: none; transition: 0.2s;
   }
-  .card input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(6, 182, 212, 0.35); }
-  .btn-join {
-    width: 100%; padding: 15px; border-radius: 16px; border: none; font-size: 16px; font-weight: 700;
+  .card input:focus { border-color: var(--accent); box-shadow: 0 0 12px rgba(6, 182, 212, 0.35); }
+
+  .btn-action {
+    width: 100%; padding: 14px; border-radius: 14px; border: none; font-size: 15px; font-weight: 700;
     color: white; background: linear-gradient(135deg, var(--primary), var(--accent));
-    cursor: pointer; margin-top: 12px; box-shadow: 0 8px 25px rgba(99,102,241,0.35);
+    cursor: pointer; margin-top: 6px; box-shadow: 0 8px 25px rgba(99,102,241,0.35);
   }
 
-  /* CHAT VIEW */
+  /* RAUM LISTE */
+  #room-list-container { overflow-y: auto; max-height: 220px; display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-right: 4px; }
+  .room-item {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+    padding: 12px 14px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .room-item-info h4 { font-size: 15px; font-weight: 600; }
+  .room-item-info span { font-size: 12px; color: var(--accent); }
+  .btn-room-join { background: var(--primary); border: none; color: #fff; padding: 6px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+  /* --- CHAT SCREEN --- */
   header {
-    padding-top: calc(var(--safe-top) + 10px);
-    padding-bottom: 14px; padding-left: 20px; padding-right: 20px;
+    padding-top: calc(var(--safe-top) + 8px);
+    padding-bottom: 12px; padding-left: 16px; padding-right: 16px;
     background: rgba(10, 15, 29, 0.85);
     backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
     border-bottom: 1px solid rgba(255,255,255,0.08);
     display: flex; justify-content: space-between; align-items: center; z-index: 20;
   }
-  .room-info h2 { font-size: 18px; font-weight: 700; color: #fff; }
-  .room-info p { font-size: 12px; color: var(--accent); }
-  .btn-leave { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 7px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .room-header-left h2 { font-size: 17px; font-weight: 700; color: #fff; }
+  .room-header-left p { font-size: 12px; color: var(--accent); }
+  .header-actions { display: flex; gap: 8px; }
+  .btn-header { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 7px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
-  #chat-messages {
-    flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px;
-  }
+  #chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
   .msg-wrapper { display: flex; flex-direction: column; max-width: 80%; animation: popIn 0.2s cubic-bezier(0.1, 1, 0.1, 1); }
   .msg-mine-wrapper { align-self: flex-end; align-items: flex-end; }
   .msg-other-wrapper { align-self: flex-start; align-items: flex-start; }
   .msg-author { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; padding-left: 4px; }
 
-  .msg-bubble {
-    padding: 10px 14px; border-radius: 18px; font-size: 15.5px; line-height: 1.4; word-break: break-word;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
-  }
+  .msg-bubble { padding: 10px 14px; border-radius: 18px; font-size: 15.5px; line-height: 1.4; word-break: break-word; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
   .msg-mine { background: linear-gradient(135deg, var(--bubble-mine), #4338ca); color: #fff; border-bottom-right-radius: 4px; }
   .msg-other { background: var(--bubble-other); color: #f1f5f9; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.08); }
   
@@ -101,7 +114,7 @@
 
   /* INPUT */
   .input-area {
-    padding: 10px 14px calc(var(--safe-bottom) + 10px);
+    padding: 10px 14px calc(var(--safe-bottom) + 8px);
     background: rgba(10, 15, 29, 0.95);
     border-top: 1px solid rgba(255,255,255,0.08);
     display: flex; gap: 8px; align-items: center;
@@ -123,38 +136,66 @@
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login-screen">
+<!-- LOBBY / RAUM VERWALTUNG -->
+<div id="lobby-screen">
   <div class="card">
-    <h1>Nexus Chat</h1>
-    <p>Trete einem privaten Raum bei</p>
-    
+    <h1>Nexus Rooms</h1>
+    <p class="sub">Erstelle Räume oder trete deinen Freunden bei</p>
+
+    <!-- NICKNAME -->
     <div class="input-group">
-      <label>Dein Name</label>
-      <input type="text" id="username" placeholder="z. B. Alex" maxlength="15">
-    </div>
-    
-    <div class="input-group">
-      <label>Raum-Name</label>
-      <input type="text" id="roomname" placeholder="z. B. Freunde" maxlength="20">
+      <label>Dein Spitzname</label>
+      <input type="text" id="username" placeholder="z. B. Sam" maxlength="15">
     </div>
 
-    <div class="input-group">
-      <label>Raum-Passwort 🔒</label>
-      <input type="password" id="roompass" placeholder="••••••••">
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tabCreateBtn" onclick="switchTab('create')">➕ Raum erstellen</button>
+      <button class="tab-btn" id="tabJoinBtn" onclick="switchTab('join')">🔍 Räume & Beitritt</button>
     </div>
 
-    <button class="btn-join" onclick="joinRoom()">Raum Betreten 🚀</button>
+    <!-- TAB 1: ERSTELLEN -->
+    <div id="tab-create">
+      <div class="input-group">
+        <label>Raum-Name</label>
+        <input type="text" id="newRoomName" placeholder="z. B. GamerLounge" maxlength="20">
+      </div>
+      <div class="input-group">
+        <label>Passwort 🔒 (optional)</label>
+        <input type="password" id="newRoomPass" placeholder="Leer lassen für öffentlich">
+      </div>
+      <button class="btn-action" onclick="createRoom()">Raum jetzt erstellen & starten 🚀</button>
+    </div>
+
+    <!-- TAB 2: BEITRETEN & LISTE -->
+    <div id="tab-join" style="display:none;">
+      <div class="input-group">
+        <label>Direkt-Beitritt (Raumname & Passwort)</label>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="directRoomName" placeholder="Raumname">
+          <input type="password" id="directRoomPass" placeholder="Passwort">
+        </div>
+      </div>
+      <button class="btn-action" style="margin-bottom:12px;" onclick="joinDirect()">Beitreten ➔</button>
+
+      <label style="font-size:12px; font-weight:600; color:var(--text-muted); text-align:left;">Aktive Live-Räume:</label>
+      <div id="room-list-container">
+        <div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px;">Suche nach Räumen...</div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- CHAT -->
+<!-- CHAT SCREEN -->
 <header>
-  <div class="room-info">
+  <div class="room-header-left">
     <h2 id="display-room">🔒 Raum</h2>
     <p>● Live & Verschlüsselt</p>
   </div>
-  <button class="btn-leave" onclick="location.reload()">Verlassen</button>
+  <div class="header-actions">
+    <button class="btn-header" onclick="copyInviteLink()">🔗 Einladen</button>
+    <button class="btn-header" onclick="location.reload()">Lobby</button>
+  </div>
 </header>
 
 <div id="chat-messages"></div>
@@ -171,50 +212,157 @@
 
 <script>
   let client = null;
+  let lobbyClient = null;
   let topic = "";
   let currentUser = "";
+  let currentRoom = "";
+  let currentPass = "";
   let mediaRecorder = null;
   let audioChunks = [];
   let isRecording = false;
+  let discoveredRooms = {};
+
+  const LOBBY_TOPIC = "nexus_v4/global_lobby_list";
+
+  // Initiale Verbindung zur Lobby für Raumliste
+  lobbyClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+  lobbyClient.on('connect', () => {
+    lobbyClient.subscribe(LOBBY_TOPIC);
+    lobbyClient.publish(LOBBY_TOPIC, JSON.stringify({ type: 'ping' }));
+  });
+
+  lobbyClient.on('message', (t, payload) => {
+    try {
+      const data = JSON.parse(payload.toString());
+      if(data.type === 'announce_room') {
+        discoveredRooms[data.room] = { hasPass: data.hasPass, time: Date.now() };
+        renderRoomList();
+      }
+    } catch(e){}
+  });
+
+  function switchTab(tab) {
+    document.getElementById('tab-create').style.display = tab === 'create' ? 'block' : 'none';
+    document.getElementById('tab-join').style.display = tab === 'join' ? 'block' : 'none';
+    document.getElementById('tabCreateBtn').className = `tab-btn ${tab === 'create' ? 'active' : ''}`;
+    document.getElementById('tabJoinBtn').className = `tab-btn ${tab === 'join' ? 'active' : ''}`;
+  }
+
+  function renderRoomList() {
+    const list = document.getElementById('room-list-container');
+    const rooms = Object.keys(discoveredRooms);
+    if(rooms.length === 0) {
+      list.innerHTML = `<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px;">Noch keine Räume offen. Erstelle den ersten!</div>`;
+      return;
+    }
+    list.innerHTML = "";
+    rooms.forEach(r => {
+      const info = discoveredRooms[r];
+      const div = document.createElement('div');
+      div.className = 'room-item';
+      div.innerHTML = `
+        <div class="room-item-info">
+          <h4>${info.hasPass ? '🔒' : '🌐'} ${escapeHtml(r)}</h4>
+          <span>${info.hasPass ? 'Passwortgeschützt' : 'Öffentlich'}</span>
+        </div>
+        <button class="btn-room-join" onclick="selectFromList('${escapeHtml(r)}', ${info.hasPass})">Beitreten</button>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function selectFromList(room, hasPass) {
+    let pass = "";
+    if(hasPass) {
+      pass = prompt("Gib das Passwort für Raum '" + room + "' ein:");
+      if(pass === null) return;
+    }
+    document.getElementById('directRoomName').value = room;
+    document.getElementById('directRoomPass').value = pass;
+    joinDirect();
+  }
 
   async function hash(str) {
     const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 20);
   }
 
-  async function joinRoom() {
+  async function createRoom() {
     const user = document.getElementById('username').value.trim();
-    const room = document.getElementById('roomname').value.trim().toLowerCase();
-    const pass = document.getElementById('roompass').value;
+    const room = document.getElementById('newRoomName').value.trim().toLowerCase();
+    const pass = document.getElementById('newRoomPass').value;
 
-    if(!user || !room || !pass) {
-      alert("Bitte fülle alle 3 Felder aus!");
+    if(!user || !room) {
+      alert("Bitte gib deinen Namen und einen Raumnamen ein!");
       return;
     }
+    startChat(user, room, pass);
+  }
 
+  async function joinDirect() {
+    const user = document.getElementById('username').value.trim();
+    const room = document.getElementById('directRoomName').value.trim().toLowerCase();
+    const pass = document.getElementById('directRoomPass').value;
+
+    if(!user || !room) {
+      alert("Bitte gib deinen Namen und den Raumnamen ein!");
+      return;
+    }
+    startChat(user, room, pass);
+  }
+
+  async function startChat(user, room, pass) {
     currentUser = user;
-    const roomHash = await hash(room + "___" + pass);
-    topic = "nexus_v3/" + roomHash;
+    currentRoom = room;
+    currentPass = pass;
 
-    document.getElementById('display-room').textContent = "🔒 " + room;
-    document.getElementById('login-screen').style.display = "none";
+    const roomHash = await hash(room + "____" + pass);
+    topic = "nexus_v4/room/" + roomHash;
+
+    document.getElementById('display-room').textContent = (pass ? '🔒 ' : '🌐 ') + room;
+    document.getElementById('lobby-screen').style.display = "none";
 
     client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
     client.on('connect', () => {
       client.subscribe(topic);
       broadcast({ type: 'sys', text: `${currentUser} ist beigetreten 👋` });
+      
+      // Kündige den Raum in der Lobby an
+      lobbyClient.publish(LOBBY_TOPIC, JSON.stringify({
+        type: 'announce_room',
+        room: room,
+        hasPass: !!pass
+      }));
     });
 
     client.on('message', (t, payload) => {
       if(t === topic) {
         try {
-          const data = JSON.parse(payload.toString());
-          renderMessage(data);
+          renderMessage(JSON.parse(payload.toString()));
         } catch(e){}
       }
     });
   }
+
+  function copyInviteLink() {
+    const url = window.location.origin + window.location.pathname + `?room=${encodeURIComponent(currentRoom)}`;
+    navigator.clipboard.writeText(url).then(() => {
+      alert("Einladungslink in Zwischenablage kopiert! Schicke ihn deinem Freund.");
+    }).catch(() => {
+      prompt("Kopiere diesen Link für deine Freunde:", url);
+    });
+  }
+
+  // URL-Parameter prüfen (für schnelles Beitreten per Link)
+  window.addEventListener('load', () => {
+    const params = new URLSearchParams(window.location.search);
+    const roomParam = params.get('room');
+    if(roomParam) {
+      switchTab('join');
+      document.getElementById('directRoomName').value = roomParam;
+    }
+  });
 
   function broadcast(data) {
     if(!client) return;
@@ -236,7 +384,6 @@
     if(!file) return;
 
     if(file.type.startsWith('image/')) {
-      // Automatisch komprimieren für blitzschnellen iPad-Versand
       const img = new Image();
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -249,24 +396,17 @@
             if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
             else { w = Math.round((w * maxDim) / h); h = maxDim; }
           }
-          canvas.width = w;
-          canvas.height = h;
+          canvas.width = w; canvas.height = h;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, w, h);
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          broadcast({ type: 'image', mediaUrl: compressedDataUrl });
+          broadcast({ type: 'image', mediaUrl: canvas.toDataURL('image/jpeg', 0.7) });
         };
       };
       reader.readAsDataURL(file);
     } else if(file.type.startsWith('video/')) {
-      if(file.size > 5 * 1024 * 1024) {
-        alert("Video ist zu groß (maximal 5MB)!");
-        return;
-      }
+      if(file.size > 5 * 1024 * 1024) { alert("Video darf max. 5MB groß sein!"); return; }
       const reader = new FileReader();
-      reader.onload = (e) => {
-        broadcast({ type: 'video', mediaUrl: e.target.result });
-      };
+      reader.onload = (e) => broadcast({ type: 'video', mediaUrl: e.target.result });
       reader.readAsDataURL(file);
     }
     input.value = "";
@@ -285,9 +425,7 @@
         mediaRecorder.onstop = () => {
           const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/mp4' });
           const reader = new FileReader();
-          reader.onload = () => {
-            broadcast({ type: 'audio', mediaUrl: reader.result });
-          };
+          reader.onload = () => broadcast({ type: 'audio', mediaUrl: reader.result });
           reader.readAsDataURL(blob);
           stream.getTracks().forEach(track => track.stop());
         };
@@ -297,7 +435,7 @@
         btn.classList.add('recording');
         btn.textContent = "⏹";
       } catch(err) {
-        alert("Mikrofon-Zugriff fehlgeschlagen oder verweigert!");
+        alert("Mikrofon-Zugriff verweigert!");
       }
     } else {
       mediaRecorder.stop();

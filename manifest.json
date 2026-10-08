@@ -1,21 +1,15 @@
 {
-  "short_name": "Nexus",
-  "name": "Nexus Chat",
+  "name": "Mein Freunde Chat",
+  "short_name": "Chat",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#e5ddd5",
+  "theme_color": "#075e54",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3670/3670157.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/3670/3670157.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/134/134937.png",
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#0a0f1d",
-  "theme_color": "#0a0f1d",
-  "orientation": "portrait"
+  ]
 }

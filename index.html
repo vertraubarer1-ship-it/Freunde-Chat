@@ -229,4 +229,245 @@ textarea.inp{min-height:90px;resize:none;line-height:1.45;}
       <div class="err" id="auErr"></div>
       <div class="swap" style="font-size:12px;" id="auReset"></div>
       <div class="note">⚠️ Hobby-Projekt: Die Übertragung läuft über einen öffentlichen Server.
-        Bitte 
+        Bitte keine wirklich geheimen Daten senden.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HOME ===== -->
+<div class="screen" id="scHome">
+  <div class="topbar">
+    <div><h2>Nexus <span id="adminTag" style="display:none;font-size:11px;color:#fcd34d;border:1px solid rgba(245,158,11,.45);padding:2px 7px;border-radius:8px;">ADMIN</span></h2>
+      <div class="me" id="meLabel">● online</div></div>
+    <div style="display:flex;gap:7px;">
+      <button class="iconbtn gold" id="btnAdmin" style="display:none;" onclick="show('scAdmin');refreshAdmin()">🛡</button>
+      <button class="iconbtn" onclick="showSecurity()">🔑</button>
+      <button class="iconbtn" onclick="logout()">⏻</button>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <div class="tabpill" id="pill" style="width:calc((100% - 12px)/3)"></div>
+    <button class="tab on" onclick="setTab(0)">Erstellen</button>
+    <button class="tab" onclick="setTab(1)">Beitreten</button>
+    <button class="tab" onclick="setTab(2)">Chats<span class="badge float" id="tabBadge">0</span></button>
+  </div>
+
+  <div class="body">
+    <div class="pane on" id="pane0">
+      <div class="field"><label>Raum-Name</label>
+        <input class="inp" id="crName" placeholder="z. B. Gaming-Lounge" maxlength="22"></div>
+      <div class="field"><label>Passwort (optional)</label>
+        <input class="inp" id="crPass" type="password" placeholder="Leer = öffentlich"></div>
+      <button class="btn" onclick="createRoom()">Raum erstellen & betreten</button>
+    </div>
+
+    <div class="pane" id="pane1">
+      <div class="field"><label>Raum-Name</label>
+        <input class="inp" id="jnName" placeholder="Name des Raums" maxlength="22"></div>
+      <div class="field"><label>Passwort (falls nötig)</label>
+        <input class="inp" id="jnPass" type="password" placeholder="••••••••"></div>
+      <button class="btn" onclick="joinTyped()">Beitreten</button>
+      <div class="secttl" style="margin-top:22px;">Aktive Räume</div>
+      <div class="list" id="roomList"><div class="empty">Suche nach Räumen…</div></div>
+    </div>
+
+    <div class="pane" id="pane2">
+      <div class="subbar">
+        <div class="subpill" id="subpill" style="width:calc((100% - 10px)/2)"></div>
+        <button class="subtab on" onclick="setSub(0)">👥 Freunde</button>
+        <button class="subtab" onclick="setSub(1)">📨 Anfragen <span class="badge" id="reqBadge">0</span></button>
+      </div>
+      <div class="subpane on" id="sub0">
+        <div class="field"><label>Freund hinzufügen</label>
+          <div style="display:flex;gap:7px;">
+            <input class="inp" id="addName" placeholder="Benutzername" maxlength="16" autocapitalize="none">
+            <button class="pill" style="padding:0 18px;" onclick="sendRequest()">Senden</button>
+          </div></div>
+        <div class="secttl" style="margin-top:18px;">Meine Freunde</div>
+        <div class="list" id="friendList"></div>
+      </div>
+      <div class="subpane" id="sub1">
+        <div class="secttl">Eingegangene Anfragen</div>
+        <div class="list" id="reqInList"></div>
+        <div class="secttl" style="margin-top:20px;">Gesendete Anfragen</div>
+        <div class="list" id="reqOutList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADMIN PANEL ===== -->
+<div class="screen" id="scAdmin">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:11px;">
+      <button class="iconbtn" onclick="show('scHome')">‹</button>
+      <div><h2>🛡 Admin-Panel</h2><div class="me" id="adMe">Moderation</div></div>
+    </div>
+    <button class="iconbtn" onclick="refreshAdmin()">⟳</button>
+  </div>
+
+  <div class="tabbar">
+    <div class="tabpill" id="apill" style="width:calc((100% - 12px)/4)"></div>
+    <button class="tab on" onclick="setATab(0)">Übersicht</button>
+    <button class="tab" onclick="setATab(1)">Räume</button>
+    <button class="tab" onclick="setATab(2)">Nutzer</button>
+    <button class="tab" onclick="setATab(3)">Senden</button>
+  </div>
+
+  <div class="body">
+    <!-- ÜBERSICHT -->
+    <div class="pane on" id="apane0">
+      <div class="stats">
+        <div class="stat"><div class="n" id="stUsers">0</div><div class="l">Nutzer online</div></div>
+        <div class="stat"><div class="n" id="stRooms">0</div><div class="l">Aktive Räume</div></div>
+        <div class="stat"><div class="n" id="stBans">0</div><div class="l">Gesperrt</div></div>
+        <div class="stat"><div class="n" id="stActs">0</div><div class="l">Mod-Aktionen</div></div>
+      </div>
+      <div class="note" style="text-align:left;">🛡 <b>Fair-Play Regel:</b> Private 1:1-Chats können nicht
+        eingesehen werden. Betrittst du einen Raum als Admin, wird allen Teilnehmern ein Hinweis angezeigt.</div>
+      <div class="secttl" style="margin-top:20px;">Moderations-Log</div>
+      <div class="list" id="logList"><div class="empty">Noch keine Aktionen.</div></div>
+    </div>
+
+    <!-- RÄUME -->
+    <div class="pane" id="apane1">
+      <div class="secttl">Öffentliche Räume moderieren</div>
+      <div class="list" id="adRoomList"><div class="empty">Keine Räume aktiv.</div></div>
+      <div class="secttl" style="margin-top:20px;">Geschützten Raum öffnen</div>
+      <div class="field"><input class="inp" id="adRoomName" placeholder="Raum-Name"></div>
+      <div class="field"><input class="inp" id="adRoomPass" type="password" placeholder="Passwort"></div>
+      <button class="btn ghost" onclick="adminOpenLocked()">Als Admin betreten</button>
+    </div>
+
+    <!-- NUTZER -->
+    <div class="pane" id="apane2">
+      <div class="secttl">Online-Nutzer</div>
+      <div class="list" id="adUserList"><div class="empty">Niemand online.</div></div>
+      <div class="secttl" style="margin-top:22px;">Gesperrte Nutzer</div>
+      <div class="list" id="adBanList"><div class="empty">Keine Sperren.</div></div>
+      <div class="field" style="margin-top:16px;">
+        <label>Nutzer manuell sperren</label>
+        <div style="display:flex;gap:7px;">
+          <input class="inp" id="banName" placeholder="Benutzername" autocapitalize="none">
+          <button class="pill red" style="padding:0 16px;" onclick="banManual()">Sperren</button>
+        </div></div>
+    </div>
+
+    <!-- SENDEN -->
+    <div class="pane" id="apane3">
+      <div class="secttl">Ankündigung an alle Nutzer</div>
+      <div class="field"><textarea class="inp" id="annText" placeholder="z. B. Wartungsarbeiten um 18 Uhr…" maxlength="300"></textarea></div>
+      <button class="btn gold" onclick="sendAnnounce()">📢 An alle senden</button>
+      <div class="note" style="margin-top:16px;">Die Nachricht erscheint bei allen als Hinweis-Banner oben
+        und im Moderations-Log.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CHAT ===== -->
+<div class="screen" id="scChat">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:11px;min-width:0;">
+      <button class="iconbtn" onclick="leaveChat()">‹</button>
+      <div style="min-width:0;" onclick="openDrawer(true)">
+        <h2 id="chTitle" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw;">Chat</h2>
+        <div class="me" id="chSub">● verbunden</div></div>
+    </div>
+    <div style="display:flex;gap:7px;">
+      <button class="iconbtn" onclick="clearHistory()">🗑</button>
+      <button class="iconbtn" id="btnMembers" onclick="openDrawer(true)">👥</button>
+      <button class="iconbtn" onclick="leaveChat()" style="background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.3);">🚪</button>
+    </div>
+  </div>
+  <div id="adminBanner">🛡 Ein Administrator beobachtet diesen Raum</div>
+
+  <div id="msgs"></div>
+
+  <div class="composer">
+    <div class="bar" id="replyBar">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+        <span style="font-size:15px;">↩︎</span>
+        <div style="min-width:0;">
+          <div style="font-size:11px;color:var(--accent);font-weight:700;" id="rpWho"></div>
+          <div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60vw;" id="rpTxt"></div>
+        </div></div><button class="x" onclick="cancelReply()">✕</button>
+    </div>
+    <div class="bar" id="attBar">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="attThumb"></div>
+        <div><div style="font-size:12px;font-weight:700;" id="attName">Datei</div>
+        <div style="font-size:11px;color:var(--muted);">Bereit zum Senden</div></div>
+      </div><button class="x" onclick="cancelAtt()">✕</button>
+    </div>
+    <div id="tray"></div>
+    <div class="ctrls">
+      <button class="cbtn" onclick="fileIn.click()">📎</button>
+      <input type="file" id="fileIn" accept="image/*,video/*" hidden onchange="pickFile(this)">
+      <button class="cbtn" onclick="tray.classList.toggle('on')">😀</button>
+      <input class="inp" id="msgIn" placeholder="Nachricht…" autocomplete="off" oninput="typingPing()" onkeydown="if(event.key==='Enter')send()">
+      <button class="cbtn" id="micBtn" onclick="toggleMic()">🎙</button>
+      <button class="cbtn send" onclick="send()">➤</button>
+    </div>
+  </div>
+</div>
+
+<div id="drawer" onclick="openDrawer(false)">
+  <div class="panel" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px;">
+      <h3 style="font-size:16px;">Teilnehmer</h3>
+      <button class="x" style="font-size:18px;" onclick="openDrawer(false)">✕</button>
+    </div>
+    <div class="list" id="memList" style="overflow-y:auto;"></div>
+  </div>
+</div>
+
+<div id="modal" onclick="closeModal()"><div class="card" onclick="event.stopPropagation()" id="modalCard"></div></div>
+
+<div id="blocked">
+  <div style="font-size:52px;">🚫</div>
+  <div style="font-size:21px;font-weight:800;">Konto gesperrt</div>
+  <div style="color:var(--muted);font-size:14px;max-width:320px;line-height:1.6;">
+    Dein Konto wurde von einem Administrator gesperrt. Wende dich an den Betreiber der App.</div>
+</div>
+
+<script>
+/* ╔══════════════════════════════════════╗
+   ║  KONFIGURATION – hier anpassen!      ║
+   ╚══════════════════════════════════════╝ */
+const ADMIN_KEY = 'nexus-admin-2024';   // << DEIN GEHEIMER ADMIN-SCHLÜSSEL
+const BROKER    = 'wss://broker.emqx.io:8084/mqtt';
+const NS        = 'nexusx4';
+
+const T_PRES=NS+'/presence', T_ROOMS=NS+'/rooms', T_FRIEND=NS+'/friend', T_ADMIN=NS+'/admin';
+const EMO=["😀","😂","🥹","😍","😎","🤔","😴","🥳","😭","😡","👍","🙏","👏","🔥","❤️","✨","💯","🎉","🚀","⚡","🍕","🎮","👀","💀"];
+
+let me='',net=null,chatTopic='',chatMode='',chatPeer='',chatRoomName='';
+let rooms=new Map(),users=new Map(),members=new Map();
+let friends=[],reqIn=[],reqOut=[],bans=[],modlog=[];
+let reply=null,att=null,rec=null,chunks=[],recording=false,tTimer=null;
+let seen=new Set(),histKey='',isAdmin=false,adminWatch=false;
+const $=id=>document.getElementById(id);
+const tray=$('tray'),fileIn=$('fileIn');
+EMO.forEach(e=>{const s=document.createElement('span');s.textContent=e;
+  s.onclick=()=>{$('msgIn').value+=e;$('msgIn').focus();};tray.appendChild(s);});
+
+const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+async function sha(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,24);}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');}
+const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}};
+const SS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+
+/* ══ KONTO ══ */
+const ACC=()=>LS('nx_acc',null), setACC=a=>SS('nx_acc',a);
+let mode='login';
+function renderAuth(){
+  const a=ACC();$('auErr').textContent='';
+  if(!a)mode='register';
+  const reg=mode==='register',res=mode==='reset';
+  $('fPass2').style.display=reg?'block':'none';
+  $('fCode').style.display=res?'block':'none';
+  $('auUser').disabled=!!a; if(a)$('auUser').value=a.u;
+  $('auBtn').textContent=reg?'Konto erstellen':(res?'Passwort zurücksetzen':'Anmelden');
+  $('auSub').textContent=reg?'Erstelle dein Konto — pro Gerät ist nur 

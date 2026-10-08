@@ -2,95 +2,350 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Freunde Chat">
-<meta name="theme-color" content="#075e54">
-<title>Freunde Chat</title>
+<meta name="apple-mobile-web-app-title" content="Nexus Chat">
+<title>Nexus Chat</title>
 <link rel="manifest" href="manifest.json">
+
+<!-- MQTT für kostenlose Live-Echtzeitübertragung -->
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background:#dddbd1; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
-  header { background: linear-gradient(180deg, #128c7e 0%, #075e54 100%); color:#fff; padding:14px 16px; padding-top:40px; font-size:18px; font-weight:600; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.25); z-index:10; position:relative; }
-  #chat { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
-  .msg { max-width:78%; padding:9px 12px; border-radius:14px; font-size:15.5px; line-height:1.35; word-wrap:break-word; box-shadow:0 1px 2px rgba(0,0,0,0.08); animation:fadeIn .2s ease; }
-  .other { align-self:flex-start; background:#fff; color:#111; border-top-left-radius:4px; }
-  .mine { align-self:flex-end; background:#dcf8c6; color:#111; border-top-right-radius:4px; }
-  .media { max-width:78%; border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,0.08); }
-  .media img, .media video { width:100%; max-height:320px; object-fit:cover; display:block; }
-  .media-caption { padding:7px 10px; font-size:13px; color:#555; }
-  @keyframes fadeIn { from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:translateY(0)} }
+  :root {
+    --bg-dark: #0a0f1d;
+    --card-bg: rgba(22, 30, 49, 0.85);
+    --primary: #6366f1;
+    --accent: #06b6d4;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --bubble-mine: #4f46e5;
+    --bubble-other: #1e293b;
+    --safe-top: env(safe-area-inset-top, 20px);
+    --safe-bottom: env(safe-area-inset-bottom, 20px);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(circle at top, #1e1b4b 0%, var(--bg-dark) 100%);
+    color: var(--text-main);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* LOGIN */
+  #login-screen {
+    position: fixed; inset: 0; z-index: 50;
+    background: radial-gradient(circle at center, #1e1b4b 0%, #060911 100%);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    padding: 32px; border-radius: 28px; width: 100%; max-width: 400px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+    text-align: center;
+  }
+  .card h1 { font-size: 28px; font-weight: 800; margin-bottom: 6px; background: linear-gradient(135deg, #a5b4fc, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .card p { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+  .input-group { margin-bottom: 14px; text-align: left; }
+  .input-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; margin-left: 4px; }
+  .card input {
+    width: 100%; padding: 14px 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(10, 15, 29, 0.7); color: #fff; font-size: 16px; outline: none; transition: 0.2s;
+  }
+  .card input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(6, 182, 212, 0.35); }
+  .btn-join {
+    width: 100%; padding: 15px; border-radius: 16px; border: none; font-size: 16px; font-weight: 700;
+    color: white; background: linear-gradient(135deg, var(--primary), var(--accent));
+    cursor: pointer; margin-top: 12px; box-shadow: 0 8px 25px rgba(99,102,241,0.35);
+  }
+
+  /* CHAT VIEW */
+  header {
+    padding-top: calc(var(--safe-top) + 10px);
+    padding-bottom: 14px; padding-left: 20px; padding-right: 20px;
+    background: rgba(10, 15, 29, 0.85);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex; justify-content: space-between; align-items: center; z-index: 20;
+  }
+  .room-info h2 { font-size: 18px; font-weight: 700; color: #fff; }
+  .room-info p { font-size: 12px; color: var(--accent); }
+  .btn-leave { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 7px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+  #chat-messages {
+    flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .msg-wrapper { display: flex; flex-direction: column; max-width: 80%; animation: popIn 0.2s cubic-bezier(0.1, 1, 0.1, 1); }
+  .msg-mine-wrapper { align-self: flex-end; align-items: flex-end; }
+  .msg-other-wrapper { align-self: flex-start; align-items: flex-start; }
+  .msg-author { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; padding-left: 4px; }
+
+  .msg-bubble {
+    padding: 10px 14px; border-radius: 18px; font-size: 15.5px; line-height: 1.4; word-break: break-word;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+  }
+  .msg-mine { background: linear-gradient(135deg, var(--bubble-mine), #4338ca); color: #fff; border-bottom-right-radius: 4px; }
+  .msg-other { background: var(--bubble-other); color: #f1f5f9; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.08); }
   
-  .input-area { background:#f0f0f0; padding:10px 14px 28px; display:flex; gap:8px; align-items:flex-end; border-top:1px solid #ccc; }
-  .input-area input[type="text"] { flex:1; border:none; border-radius:24px; padding:11px 16px; font-size:16px; outline:none; background:#fff; -webkit-appearance:none; }
-  button { border:none; border-radius:50%; width:44px; height:44px; font-size:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
-  .btn-green { background:#25d366; color:#fff; }
-  .btn-gray { background:#e0e0e0; color:#555; }
-  input[type="file"] { display:none; }
+  .media-msg img, .media-msg video { width: 100%; max-height: 280px; border-radius: 12px; display: block; margin-top: 4px; object-fit: cover; }
+  audio { width: 230px; height: 38px; border-radius: 20px; margin-top: 4px; }
+
+  /* INPUT */
+  .input-area {
+    padding: 10px 14px calc(var(--safe-bottom) + 10px);
+    background: rgba(10, 15, 29, 0.95);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex; gap: 8px; align-items: center;
+  }
+  .input-area input[type="text"] {
+    flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+    padding: 12px 18px; border-radius: 24px; color: white; font-size: 16px; outline: none;
+  }
+  .icon-btn {
+    width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(255,255,255,0.08);
+    color: white; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+  }
+  .send-btn { background: linear-gradient(135deg, var(--primary), var(--accent)); box-shadow: 0 4px 15px rgba(99,102,241,0.4); }
+  .recording { background: #ef4444 !important; animation: pulse 1s infinite alternate; }
+
+  @keyframes popIn { from { opacity: 0; transform: translateY(8px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes pulse { from { box-shadow: 0 0 5px #ef4444; } to { box-shadow: 0 0 20px #ef4444; } }
 </style>
 </head>
 <body>
 
-<header>Freunde Chat 💬</header>
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="card">
+    <h1>Nexus Chat</h1>
+    <p>Trete einem privaten Raum bei</p>
+    
+    <div class="input-group">
+      <label>Dein Name</label>
+      <input type="text" id="username" placeholder="z. B. Alex" maxlength="15">
+    </div>
+    
+    <div class="input-group">
+      <label>Raum-Name</label>
+      <input type="text" id="roomname" placeholder="z. B. Freunde" maxlength="20">
+    </div>
 
-<div id="chat">
-  <div class="msg other">Hey! Bist du online? 👋</div>
-  <div class="msg mine">Ja! Hast du das neue Video gesehen? 🎬</div>
+    <div class="input-group">
+      <label>Raum-Passwort 🔒</label>
+      <input type="password" id="roompass" placeholder="••••••••">
+    </div>
+
+    <button class="btn-join" onclick="joinRoom()">Raum Betreten 🚀</button>
+  </div>
 </div>
 
+<!-- CHAT -->
+<header>
+  <div class="room-info">
+    <h2 id="display-room">🔒 Raum</h2>
+    <p>● Live & Verschlüsselt</p>
+  </div>
+  <button class="btn-leave" onclick="location.reload()">Verlassen</button>
+</header>
+
+<div id="chat-messages"></div>
+
 <div class="input-area">
-  <!-- Foto / Video -->
-  <button class="btn-gray" onclick="document.getElementById('fileIn').click()" title="Foto/Video">📎</button>
-  <input type="file" id="fileIn" accept="image/*,video/*" capture="environment" onchange="sendFile(this)">
+  <button class="icon-btn" onclick="document.getElementById('fileIn').click()">📎</button>
+  <input type="file" id="fileIn" accept="image/*,video/*" style="display:none;" onchange="handleFile(this)">
 
-  <!-- Text -->
-  <input type="text" id="textIn" placeholder="Nachricht schreiben..." autocomplete="off" onkeydown="if(event.key==='Enter') sendText()">
+  <input type="text" id="msgIn" placeholder="Nachricht schreiben..." autocomplete="off" onkeydown="if(event.key==='Enter') sendText()">
 
-  <!-- Sprachnachricht -->
-  <button class="btn-gray" onclick="sendVoice()" title="Sprachnachricht">🎤</button>
-
-  <!-- Senden -->
-  <button class="btn-green" onclick="sendText()" title="Senden">➤</button>
+  <button class="icon-btn" id="voiceBtn" onclick="toggleVoice()">🎙</button>
+  <button class="icon-btn send-btn" onclick="sendText()">➤</button>
 </div>
 
 <script>
-  const chat = document.getElementById('chat');
+  let client = null;
+  let topic = "";
+  let currentUser = "";
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let isRecording = false;
+
+  async function hash(str) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 20);
+  }
+
+  async function joinRoom() {
+    const user = document.getElementById('username').value.trim();
+    const room = document.getElementById('roomname').value.trim().toLowerCase();
+    const pass = document.getElementById('roompass').value;
+
+    if(!user || !room || !pass) {
+      alert("Bitte fülle alle 3 Felder aus!");
+      return;
+    }
+
+    currentUser = user;
+    const roomHash = await hash(room + "___" + pass);
+    topic = "nexus_v3/" + roomHash;
+
+    document.getElementById('display-room').textContent = "🔒 " + room;
+    document.getElementById('login-screen').style.display = "none";
+
+    client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+
+    client.on('connect', () => {
+      client.subscribe(topic);
+      broadcast({ type: 'sys', text: `${currentUser} ist beigetreten 👋` });
+    });
+
+    client.on('message', (t, payload) => {
+      if(t === topic) {
+        try {
+          const data = JSON.parse(payload.toString());
+          renderMessage(data);
+        } catch(e){}
+      }
+    });
+  }
+
+  function broadcast(data) {
+    if(!client) return;
+    data.sender = currentUser;
+    data.time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    client.publish(topic, JSON.stringify(data));
+  }
 
   function sendText() {
-    const val = document.getElementById('textIn').value.trim();
+    const input = document.getElementById('msgIn');
+    const val = input.value.trim();
     if(!val) return;
-    const div = document.createElement('div');
-    div.className = 'msg mine';
-    div.textContent = val;
-    chat.appendChild(div);
-    document.getElementById('textIn').value = '';
-    chat.scrollTop = chat.scrollHeight;
+    broadcast({ type: 'text', text: val });
+    input.value = "";
   }
 
-  function sendFile(input) {
+  function handleFile(input) {
     const file = input.files[0];
     if(!file) return;
-    const url = URL.createObjectURL(file);
-    const wrapper = document.createElement('div');
-    wrapper.className = 'msg mine media';
-    if(file.type.startsWith('video/')){
-      wrapper.innerHTML = `<video src="${url}" controls></video><div class="media-caption">${file.name}</div>`;
-    } else {
-      wrapper.innerHTML = `<img src="${url}" alt="Bild"><div class="media-caption">${file.name}</div>`;
+
+    if(file.type.startsWith('image/')) {
+      // Automatisch komprimieren für blitzschnellen iPad-Versand
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.src = e.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 1000;
+          let w = img.width, h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+            else { w = Math.round((w * maxDim) / h); h = maxDim; }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          broadcast({ type: 'image', mediaUrl: compressedDataUrl });
+        };
+      };
+      reader.readAsDataURL(file);
+    } else if(file.type.startsWith('video/')) {
+      if(file.size > 5 * 1024 * 1024) {
+        alert("Video ist zu groß (maximal 5MB)!");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        broadcast({ type: 'video', mediaUrl: e.target.result });
+      };
+      reader.readAsDataURL(file);
     }
-    chat.appendChild(wrapper);
-chat.scrollTop = chat.scrollHeight;
-    input.value = '';
+    input.value = "";
   }
 
-  function sendVoice() {
-    alert("Sprachnachricht (Demo): Hier kannst du später einen Server (z.B. Firebase) für echte Stimmen einbinden. Für jetzt wird eine Text-Marke gesendet.");
-    const div = document.createElement('div');
-    div.className = 'msg mine';
-    div.textContent = "🎙 Sprachnachricht";
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
+  async function toggleVoice() {
+    const btn = document.getElementById('voiceBtn');
+    if(!isRecording) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const options = MediaRecorder.isTypeSupported('audio/mp4') ? { mimeType: 'audio/mp4' } : {};
+        mediaRecorder = new MediaRecorder(stream, options);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => { if(e.data.size > 0) audioChunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/mp4' });
+          const reader = new FileReader();
+          reader.onload = () => {
+            broadcast({ type: 'audio', mediaUrl: reader.result });
+          };
+          reader.readAsDataURL(blob);
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        btn.classList.add('recording');
+        btn.textContent = "⏹";
+      } catch(err) {
+        alert("Mikrofon-Zugriff fehlgeschlagen oder verweigert!");
+      }
+    } else {
+      mediaRecorder.stop();
+      isRecording = false;
+      btn.classList.remove('recording');
+      btn.textContent = "🎙";
+    }
+  }
+
+  function renderMessage(data) {
+    const box = document.getElementById('chat-messages');
+    const isMine = data.sender === currentUser;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = `msg-wrapper ${isMine ? 'msg-mine-wrapper' : 'msg-other-wrapper'}`;
+
+    if(data.type === 'sys') {
+      wrapper.style.alignSelf = 'center';
+      wrapper.innerHTML = `<span style="font-size:12px; color:var(--text-muted); background:rgba(255,255,255,0.06); padding:4px 12px; border-radius:12px;">${escapeHtml(data.text)}</span>`;
+      box.appendChild(wrapper);
+      box.scrollTop = box.scrollHeight;
+      return;
+    }
+
+    let content = "";
+    if(data.type === 'text') {
+      content = `<div>${escapeHtml(data.text)}</div>`;
+    } else if(data.type === 'image') {
+      content = `<div class="media-msg"><img src="${data.mediaUrl}"></div>`;
+    } else if(data.type === 'video') {
+      content = `<div class="media-msg"><video src="${data.mediaUrl}" controls playsinline></video></div>`;
+    } else if(data.type === 'audio') {
+      content = `<div>🎙 Sprachnachricht<br><audio src="${data.mediaUrl}" controls playsinline></audio></div>`;
+    }
+
+    wrapper.innerHTML = `
+      ${!isMine ? `<div class="msg-author">${escapeHtml(data.sender)} • ${data.time}</div>` : ''}
+      <div class="msg-bubble ${isMine ? 'msg-mine' : 'msg-other'}">
+        ${content}
+      </div>
+    `;
+
+    box.appendChild(wrapper);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 </script>
 

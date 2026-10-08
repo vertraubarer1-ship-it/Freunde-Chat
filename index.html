@@ -10,46 +10,40 @@
 <link rel="manifest" href="manifest.json">
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <style>
-:root{
-  --bg:#070b14;--panel:rgba(20,27,45,.82);--line:rgba(255,255,255,.09);
-  --primary:#6366f1;--accent:#22d3ee;--green:#10b981;--red:#ef4444;--gold:#f59e0b;
-  --txt:#f1f5f9;--muted:#8b98ad;
-  --st:env(safe-area-inset-top,20px);--sb:env(safe-area-inset-bottom,16px);
-  --ease:cubic-bezier(.22,1,.36,1);
-}
+:root{--bg:#070b14;--panel:rgba(20,27,45,.82);--line:rgba(255,255,255,.09);
+--primary:#6366f1;--accent:#22d3ee;--green:#10b981;--red:#ef4444;--gold:#f59e0b;
+--txt:#f1f5f9;--muted:#8b98ad;--st:env(safe-area-inset-top,20px);--sb:env(safe-area-inset-bottom,16px);
+--ease:cubic-bezier(.22,1,.36,1);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overscroll-behavior:none;}
 body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
-  background:var(--bg);color:var(--txt);overflow:hidden;-webkit-font-smoothing:antialiased;}
+background:var(--bg);color:var(--txt);overflow:hidden;-webkit-font-smoothing:antialiased;}
 body::before{content:"";position:fixed;inset:0;z-index:-1;
-  background:radial-gradient(900px 600px at 50% -10%,#2b2a6e 0%,transparent 60%),
-             radial-gradient(700px 500px at 100% 100%,#0e4a5e 0%,transparent 55%),var(--bg);}
+background:radial-gradient(900px 600px at 50% -10%,#2b2a6e 0%,transparent 60%),
+radial-gradient(700px 500px at 100% 100%,#0e4a5e 0%,transparent 55%),var(--bg);}
 button,input,textarea{font-family:inherit;}button{cursor:pointer;}
-
-.screen{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;
-  transform:translate3d(0,0,0) scale(.98);pointer-events:none;
-  transition:opacity .32s var(--ease),transform .32s var(--ease);will-change:opacity,transform;}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;transform:scale(.98);
+pointer-events:none;transition:opacity .32s var(--ease),transform .32s var(--ease);}
 .screen.active{opacity:1;transform:none;pointer-events:auto;}
-
 .center{display:flex;align-items:center;justify-content:center;padding:22px;height:100%;overflow-y:auto;}
-.card{width:100%;max-width:400px;padding:30px 26px;border-radius:28px;background:var(--panel);
-  border:1px solid var(--line);backdrop-filter:blur(28px) saturate(160%);
-  -webkit-backdrop-filter:blur(28px) saturate(160%);box-shadow:0 30px 70px rgba(0,0,0,.55);}
+.card{width:100%;max-width:410px;padding:30px 26px;border-radius:28px;background:var(--panel);
+border:1px solid var(--line);backdrop-filter:blur(28px) saturate(160%);
+-webkit-backdrop-filter:blur(28px) saturate(160%);box-shadow:0 30px 70px rgba(0,0,0,.55);}
 .logo{font-size:30px;font-weight:800;text-align:center;letter-spacing:-.5px;
-  background:linear-gradient(120deg,#a5b4fc,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.sub{text-align:center;color:var(--muted);font-size:13.5px;margin:6px 0 20px;line-height:1.5;}
+background:linear-gradient(120deg,#a5b4fc,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.sub{text-align:center;color:var(--muted);font-size:13.5px;margin:6px 0 20px;line-height:1.55;}
 .field{margin-bottom:13px;}
 .field label{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin:0 0 6px 4px;
-  letter-spacing:.3px;text-transform:uppercase;}
+letter-spacing:.3px;text-transform:uppercase;}
 .inp{width:100%;padding:13px 16px;border-radius:15px;font-size:16px;color:#fff;outline:none;
-  background:rgba(8,12,22,.7);border:1px solid var(--line);
-  transition:border-color .2s var(--ease),box-shadow .2s var(--ease);}
+background:rgba(8,12,22,.7);border:1px solid var(--line);transition:border-color .2s,box-shadow .2s;}
 .inp:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(34,211,238,.12);}
 .inp:disabled{opacity:.6;}
-textarea.inp{min-height:90px;resize:none;line-height:1.45;}
+textarea.inp{min-height:84px;resize:none;line-height:1.45;}
+textarea.mono{font-family:ui-monospace,monospace;font-size:10.5px;min-height:120px;}
 .btn{width:100%;padding:15px;border:none;border-radius:15px;font-size:15.5px;font-weight:700;color:#fff;
-  background:linear-gradient(120deg,var(--primary),var(--accent));box-shadow:0 10px 26px rgba(99,102,241,.35);
-  margin-top:8px;transition:transform .14s var(--ease),filter .2s;}
+background:linear-gradient(120deg,var(--primary),var(--accent));box-shadow:0 10px 26px rgba(99,102,241,.35);
+margin-top:8px;transition:transform .14s var(--ease),filter .2s;}
 .btn:active{transform:scale(.97);filter:brightness(1.1);}
 .btn.ghost{background:rgba(255,255,255,.07);box-shadow:none;border:1px solid var(--line);}
 .btn.danger{background:rgba(239,68,68,.16);border:1px solid rgba(239,68,68,.35);color:#fca5a5;box-shadow:none;}
@@ -58,86 +52,80 @@ textarea.inp{min-height:90px;resize:none;line-height:1.45;}
 .swap b{color:var(--accent);}
 .err{color:#fca5a5;font-size:12.5px;text-align:center;margin-top:10px;min-height:16px;line-height:1.4;}
 .note{font-size:11px;color:#fbbf24;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);
-  border-radius:12px;padding:10px 12px;line-height:1.5;margin-top:14px;text-align:center;}
+border-radius:12px;padding:10px 12px;line-height:1.55;margin-top:14px;text-align:center;}
+.note.green{color:#6ee7b7;background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.28);}
 .codebox{background:rgba(34,211,238,.09);border:1px dashed rgba(34,211,238,.45);border-radius:16px;
-  padding:16px;text-align:center;margin:14px 0;}
+padding:16px;text-align:center;margin:14px 0;}
 .codebox .c{font-size:23px;font-weight:800;letter-spacing:3px;color:#67e8f9;font-family:ui-monospace,monospace;}
-
 .topbar{padding:calc(var(--st) + 10px) 18px 12px;display:flex;align-items:center;justify-content:space-between;
-  background:rgba(8,12,22,.72);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
-  border-bottom:1px solid var(--line);flex-shrink:0;}
+background:rgba(8,12,22,.72);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+border-bottom:1px solid var(--line);flex-shrink:0;}
 .topbar h2{font-size:18px;font-weight:750;letter-spacing:-.3px;display:flex;align-items:center;gap:7px;}
 .topbar .me{font-size:11.5px;color:var(--accent);}
 .iconbtn{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.07);
-  color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;
-  transition:transform .14s var(--ease),background .2s;}
+color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;
+transition:transform .14s var(--ease),background .2s;}
 .iconbtn:active{transform:scale(.9);background:rgba(255,255,255,.14);}
 .iconbtn.gold{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.4);}
+.iconbtn.live{background:rgba(16,185,129,.18);border-color:rgba(16,185,129,.4);}
 .body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px 28px;}
-
 .tabbar{display:flex;gap:4px;padding:6px;margin:0 16px 14px;border-radius:18px;background:rgba(0,0,0,.35);
-  border:1px solid var(--line);position:relative;flex-shrink:0;}
+border:1px solid var(--line);position:relative;flex-shrink:0;}
 .tab{flex:1;padding:11px 4px;border:none;background:transparent;color:var(--muted);font-size:12.5px;
-  font-weight:700;border-radius:14px;z-index:2;transition:color .25s var(--ease);position:relative;}
+font-weight:700;border-radius:14px;z-index:2;transition:color .25s;position:relative;}
 .tab.on{color:#fff;}
 .tabpill{position:absolute;top:6px;bottom:6px;left:6px;background:linear-gradient(120deg,var(--primary),var(--accent));
-  border-radius:14px;z-index:1;box-shadow:0 6px 18px rgba(99,102,241,.4);
-  transition:transform .34s var(--ease),width .2s;will-change:transform;}
+border-radius:14px;z-index:1;box-shadow:0 6px 18px rgba(99,102,241,.4);transition:transform .34s var(--ease);}
 .pane,.subpane{display:none;animation:fade .3s var(--ease);}
 .pane.on,.subpane.on{display:block;}
 @keyframes fade{from{opacity:0;transform:translate3d(0,8px,0);}to{opacity:1;transform:none;}}
-
 .subbar{display:flex;gap:6px;padding:5px;border-radius:16px;background:rgba(0,0,0,.3);
-  border:1px solid var(--line);position:relative;margin-bottom:16px;}
+border:1px solid var(--line);position:relative;margin-bottom:16px;}
 .subtab{flex:1;padding:10px 4px;border:none;background:transparent;color:var(--muted);font-size:12.5px;
-  font-weight:700;border-radius:12px;z-index:2;transition:color .25s var(--ease);
-  display:flex;align-items:center;justify-content:center;gap:6px;}
+font-weight:700;border-radius:12px;z-index:2;transition:color .25s;display:flex;align-items:center;
+justify-content:center;gap:6px;}
 .subtab.on{color:#fff;}
 .subpill{position:absolute;top:5px;bottom:5px;left:5px;background:rgba(255,255,255,.12);
-  border:1px solid var(--line);border-radius:12px;z-index:1;transition:transform .3s var(--ease);}
+border:1px solid var(--line);border-radius:12px;z-index:1;transition:transform .3s var(--ease);}
 .badge{min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--red);color:#fff;
-  font-size:10.5px;font-weight:800;display:none;align-items:center;justify-content:center;}
-.badge.on{display:flex;}
-.badge.float{position:absolute;top:-5px;right:-5px;}
-
+font-size:10.5px;font-weight:800;display:none;align-items:center;justify-content:center;flex-shrink:0;}
+.badge.on{display:flex;}.badge.float{position:absolute;top:-5px;right:-5px;}
 .list{display:flex;flex-direction:column;gap:9px;}
 .item{display:flex;align-items:center;gap:11px;padding:13px 14px;border-radius:17px;
-  background:rgba(255,255,255,.045);border:1px solid var(--line);
-  transition:transform .16s var(--ease),background .2s;}
+background:rgba(255,255,255,.045);border:1px solid var(--line);transition:transform .16s,background .2s;}
+.item.unread{background:rgba(99,102,241,.14);border-color:rgba(99,102,241,.4);}
 .item:active{transform:scale(.985);background:rgba(255,255,255,.08);}
 .avatar{width:42px;height:42px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;
-  justify-content:center;font-weight:800;font-size:16px;color:#fff;
-  background:linear-gradient(135deg,var(--primary),var(--accent));}
+justify-content:center;font-weight:800;font-size:16px;color:#fff;
+background:linear-gradient(135deg,var(--primary),var(--accent));}
 .avatar.off{background:linear-gradient(135deg,#374151,#4b5563);}
 .avatar.gold{background:linear-gradient(135deg,#f59e0b,#f97316);}
 .avatar.ban{background:linear-gradient(135deg,#7f1d1d,#991b1b);}
 .item .meta{flex:1;min-width:0;}
 .item .meta h4{font-size:15px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.item .meta span{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+.item .meta span{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;
+text-overflow:ellipsis;display:block;}
+.item.unread .meta span{color:#c7d2fe;font-weight:600;}
 .pill{padding:7px 12px;border-radius:11px;border:none;font-size:12px;font-weight:700;color:#fff;
-  background:var(--primary);transition:transform .14s var(--ease);flex-shrink:0;}
+background:var(--primary);transition:transform .14s;flex-shrink:0;}
 .pill:active{transform:scale(.92);}
-.pill.gray{background:rgba(255,255,255,.1);}
-.pill.green{background:var(--green);}
+.pill.gray{background:rgba(255,255,255,.1);}.pill.green{background:var(--green);}
 .pill.red{background:rgba(239,68,68,.22);border:1px solid rgba(239,68,68,.4);color:#fca5a5;}
 .pill.gold{background:rgba(245,158,11,.22);border:1px solid rgba(245,158,11,.45);color:#fcd34d;}
 .empty{text-align:center;color:var(--muted);font-size:13px;padding:28px 10px;line-height:1.6;}
 .secttl{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;
-  margin:4px 0 10px 4px;}
+margin:4px 0 10px 4px;}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex-shrink:0;}
 .dot.off{background:#4b5563;box-shadow:none;}
-
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
 .stat{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:center;}
 .stat .n{font-size:28px;font-weight:800;background:linear-gradient(120deg,#a5b4fc,#22d3ee);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:3px;}
-
 .logline{font-size:11.5px;color:var(--muted);padding:8px 12px;background:rgba(255,255,255,.035);
-  border-radius:11px;border-left:3px solid var(--gold);line-height:1.45;}
-
-#msgs,#modFeed{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 14px;display:flex;
-  flex-direction:column;gap:9px;}
+border-radius:11px;border-left:3px solid var(--gold);line-height:1.45;}
+#msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 14px;display:flex;
+flex-direction:column;gap:9px;}
 .row{display:flex;flex-direction:column;max-width:84%;animation:pop .28s var(--ease) both;}
 .row.nofx{animation:none;}
 @keyframes pop{from{opacity:0;transform:translate3d(0,12px,0) scale(.97);}to{opacity:1;transform:none;}}
@@ -147,259 +135,219 @@ textarea.inp{min-height:90px;resize:none;line-height:1.45;}
 .bwrap{display:flex;align-items:center;gap:6px;}
 .row.me .bwrap{flex-direction:row-reverse;}
 .bub{padding:10px 14px;border-radius:19px;font-size:15px;line-height:1.42;word-break:break-word;
-  box-shadow:0 6px 20px rgba(0,0,0,.28);}
+box-shadow:0 6px 20px rgba(0,0,0,.28);}
 .row.me .bub{background:linear-gradient(130deg,#5b55e8,#4338ca);border-bottom-right-radius:5px;}
 .row.you .bub{background:#1b2436;border:1px solid var(--line);border-bottom-left-radius:5px;}
 .stamp{font-size:9.5px;color:rgba(255,255,255,.45);margin-top:3px;text-align:right;}
 .quote{background:rgba(0,0,0,.28);border-left:3px solid var(--accent);padding:5px 9px;border-radius:7px;
-  font-size:12px;margin-bottom:6px;}
+font-size:12px;margin-bottom:6px;}
 .quote b{color:var(--accent);font-size:11px;display:block;}
 .rbtn{opacity:.35;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,.08);
-  color:#fff;font-size:12px;transition:opacity .2s,transform .14s;}
+color:#fff;font-size:12px;transition:opacity .2s,transform .14s;}
 .rbtn:active{opacity:1;transform:scale(1.15);}
 .bub img,.bub video{width:100%;max-height:280px;border-radius:13px;display:block;margin-top:5px;object-fit:cover;}
 .bub audio{width:220px;height:36px;margin-top:5px;}
 .sys{align-self:center;font-size:11.5px;color:var(--muted);background:rgba(255,255,255,.055);
-  padding:5px 13px;border-radius:12px;text-align:center;max-width:90%;}
+padding:5px 13px;border-radius:12px;text-align:center;max-width:90%;}
 .sys.admin{color:#fcd34d;background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.3);}
 .divider{align-self:center;font-size:10.5px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;
-  padding:6px 14px;background:rgba(255,255,255,.04);border-radius:10px;margin:4px 0;}
-
-#adminBanner{display:none;padding:8px 16px;background:rgba(245,158,11,.16);
-  border-bottom:1px solid rgba(245,158,11,.35);color:#fcd34d;font-size:12px;text-align:center;font-weight:600;}
-#adminBanner.on{display:block;animation:fade .3s var(--ease);}
-
+padding:6px 14px;background:rgba(255,255,255,.04);border-radius:10px;margin:4px 0;}
+#adminBanner,#cryptoBanner{display:none;padding:7px 16px;font-size:11.5px;text-align:center;font-weight:600;}
+#adminBanner{background:rgba(245,158,11,.16);border-bottom:1px solid rgba(245,158,11,.35);color:#fcd34d;}
+#cryptoBanner{background:rgba(16,185,129,.12);border-bottom:1px solid rgba(16,185,129,.3);color:#6ee7b7;}
+#adminBanner.on,#cryptoBanner.on{display:block;animation:fade .3s var(--ease);}
 .composer{flex-shrink:0;background:rgba(8,12,22,.93);border-top:1px solid var(--line);
-  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);padding-bottom:calc(var(--sb) + 6px);}
+backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);padding-bottom:calc(var(--sb) + 6px);}
 .bar{display:none;align-items:center;justify-content:space-between;padding:8px 16px;
-  border-bottom:1px solid var(--line);background:rgba(255,255,255,.04);animation:fade .22s var(--ease);}
+border-bottom:1px solid var(--line);background:rgba(255,255,255,.04);animation:fade .22s var(--ease);}
 .bar.on{display:flex;}
 .thumb{width:38px;height:38px;border-radius:9px;object-fit:cover;background:#000;display:flex;
-  align-items:center;justify-content:center;}
+align-items:center;justify-content:center;}
 .x{background:none;border:none;color:var(--muted);font-size:17px;padding:4px 6px;}
 #tray{display:none;grid-template-columns:repeat(8,1fr);gap:6px;padding:12px 14px;max-height:142px;
-  overflow-y:auto;border-bottom:1px solid var(--line);}
+overflow-y:auto;border-bottom:1px solid var(--line);}
 #tray.on{display:grid;animation:fade .22s var(--ease);}
 #tray span{font-size:24px;text-align:center;transition:transform .13s;}
 #tray span:active{transform:scale(1.35);}
 .ctrls{display:flex;gap:7px;align-items:center;padding:9px 12px 5px;}
 .ctrls .inp{flex:1;border-radius:22px;padding:11px 17px;font-size:15.5px;background:rgba(255,255,255,.075);}
 .cbtn{width:42px;height:42px;border-radius:50%;border:none;background:rgba(255,255,255,.08);color:#fff;
-  font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  transition:transform .14s var(--ease),background .2s;}
+font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+transition:transform .14s,background .2s;}
 .cbtn:active{transform:scale(.9);}
 .cbtn.send{background:linear-gradient(120deg,var(--primary),var(--accent));box-shadow:0 6px 18px rgba(99,102,241,.4);}
 .cbtn.rec{background:var(--red)!important;animation:glow 1s infinite alternate;}
 @keyframes glow{from{box-shadow:0 0 4px var(--red);}to{box-shadow:0 0 20px var(--red);}}
-
-#drawer{position:fixed;inset:0;z-index:90;pointer-events:none;background:rgba(0,0,0,0);
-  transition:background .3s var(--ease);}
+#drawer{position:fixed;inset:0;z-index:90;pointer-events:none;background:rgba(0,0,0,0);transition:background .3s;}
 #drawer.on{pointer-events:auto;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);}
 #drawer .panel{position:absolute;top:0;right:0;width:272px;height:100%;background:var(--panel);
-  border-left:1px solid var(--line);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
-  padding:calc(var(--st) + 18px) 18px 18px;display:flex;flex-direction:column;gap:14px;
-  transform:translate3d(100%,0,0);transition:transform .34s var(--ease);}
+border-left:1px solid var(--line);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+padding:calc(var(--st) + 18px) 18px 18px;display:flex;flex-direction:column;gap:14px;
+transform:translate3d(100%,0,0);transition:transform .34s var(--ease);}
 #drawer.on .panel{transform:none;}
 #modal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;
-  background:rgba(0,0,0,.6);backdrop-filter:blur(5px);padding:22px;}
+background:rgba(0,0,0,.65);backdrop-filter:blur(5px);padding:20px;overflow-y:auto;}
 #modal.on{display:flex;animation:fade .25s var(--ease);}
 #blocked{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
-  background:#0a0408;padding:28px;text-align:center;flex-direction:column;gap:14px;}
+background:#0a0408;padding:28px;text-align:center;flex-direction:column;gap:14px;}
 #blocked.on{display:flex;}
+#popup{position:fixed;top:calc(var(--st) + 8px);left:50%;transform:translateX(-50%) translateY(-140%);
+z-index:150;width:min(420px,92vw);background:rgba(25,33,54,.96);border:1px solid rgba(99,102,241,.5);
+border-radius:18px;padding:12px 14px;display:flex;align-items:center;gap:11px;
+box-shadow:0 18px 44px rgba(0,0,0,.6);backdrop-filter:blur(22px);
+transition:transform .38s var(--ease);cursor:pointer;}
+#popup.on{transform:translateX(-50%) translateY(0);}
+#popup .t{font-size:13.5px;font-weight:750;}
+#popup .m{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 ::-webkit-scrollbar{width:0;height:0;}
 </style>
 </head>
 <body>
 
-<!-- ===== AUTH ===== -->
 <div class="screen active" id="scAuth">
-  <div class="center">
-    <div class="card">
-      <div class="logo">Nexus</div>
-      <div class="sub" id="auSub">Melde dich an</div>
-      <div class="field"><label>Benutzername</label>
-        <input class="inp" id="auUser" placeholder="z. B. alex" maxlength="16" autocapitalize="none" autocomplete="off"></div>
-      <div class="field" id="fPass"><label>Passwort</label>
-        <input class="inp" id="auPass" type="password" placeholder="••••••••"></div>
-      <div class="field" id="fPass2" style="display:none;"><label>Passwort wiederholen</label>
-        <input class="inp" id="auPass2" type="password" placeholder="••••••••"></div>
-      <div class="field" id="fCode" style="display:none;"><label>Wiederherstellungs-Code</label>
-        <input class="inp" id="auCode" placeholder="XXXX-XXXX" autocapitalize="characters"></div>
-      <button class="btn" id="auBtn" onclick="submitAuth()">Anmelden</button>
-      <div class="err" id="auErr"></div>
-      <div class="swap" style="font-size:12px;" id="auReset"></div>
-      <div class="note">⚠️ Hobby-Projekt: Die Übertragung läuft über einen öffentlichen Server.
-        Bitte keine wirklich geheimen Daten senden.</div>
-    </div>
-  </div>
+  <div class="center"><div class="card">
+    <div class="logo" id="brandLogo">Nexus</div>
+    <div class="sub" id="auSub">Melde dich an</div>
+    <div class="field"><label>Benutzername</label>
+      <input class="inp" id="auUser" placeholder="z. B. alex" maxlength="16" autocapitalize="none" autocomplete="off"></div>
+    <div class="field" id="fPass"><label>Passwort</label>
+      <input class="inp" id="auPass" type="password" placeholder="••••••••"></div>
+    <div class="field" id="fPass2" style="display:none;"><label>Passwort wiederholen</label>
+      <input class="inp" id="auPass2" type="password" placeholder="••••••••"></div>
+    <div class="field" id="fCode" style="display:none;"><label>Wiederherstellungs-Code</label>
+      <input class="inp" id="auCode" placeholder="XXXX-XXXX" autocapitalize="characters"></div>
+    <button class="btn" id="auBtn" onclick="submitAuth()">Anmelden</button>
+    <div class="err" id="auErr"></div>
+    <div class="swap" style="font-size:12px;" id="auReset"></div>
+    <div class="note green">🔐 AES-256 Ende-zu-Ende · 📥 Hintergrund-Empfang · 🔔 Benachrichtigungen</div>
+  </div></div>
 </div>
 
-<!-- ===== HOME ===== -->
 <div class="screen" id="scHome">
   <div class="topbar">
     <div><h2>Nexus <span id="adminTag" style="display:none;font-size:11px;color:#fcd34d;border:1px solid rgba(245,158,11,.45);padding:2px 7px;border-radius:8px;">ADMIN</span></h2>
       <div class="me" id="meLabel">● online</div></div>
     <div style="display:flex;gap:7px;">
+      <button class="iconbtn" id="btnBell" onclick="askNotify()">🔔</button>
       <button class="iconbtn gold" id="btnAdmin" style="display:none;" onclick="show('scAdmin');refreshAdmin()">🛡</button>
       <button class="iconbtn" onclick="showSecurity()">🔑</button>
-      <button class="iconbtn" onclick="logout()">⏻</button>
-    </div>
+      <button class="iconbtn" onclick="logout()">⏻</button></div>
   </div>
-
-  <div class="tabbar">
-    <div class="tabpill" id="pill" style="width:calc((100% - 12px)/3)"></div>
+  <div class="tabbar"><div class="tabpill" id="pill" style="width:calc((100% - 12px)/3)"></div>
     <button class="tab on" onclick="setTab(0)">Erstellen</button>
     <button class="tab" onclick="setTab(1)">Beitreten</button>
     <button class="tab" onclick="setTab(2)">Chats<span class="badge float" id="tabBadge">0</span></button>
   </div>
-
   <div class="body">
     <div class="pane on" id="pane0">
-      <div class="field"><label>Raum-Name</label>
-        <input class="inp" id="crName" placeholder="z. B. Gaming-Lounge" maxlength="22"></div>
-      <div class="field"><label>Passwort (optional)</label>
-        <input class="inp" id="crPass" type="password" placeholder="Leer = öffentlich"></div>
+      <div class="field"><label>Raum-Name</label><input class="inp" id="crName" placeholder="z. B. Gaming-Lounge" maxlength="22"></div>
+      <div class="field"><label>Passwort (empfohlen!)</label><input class="inp" id="crPass" type="password" placeholder="Schützt & verschlüsselt den Raum"></div>
       <button class="btn" onclick="createRoom()">Raum erstellen & betreten</button>
+      <div class="note">Das Raum-Passwort ist gleichzeitig der Verschlüsselungs-Schlüssel.</div>
     </div>
-
     <div class="pane" id="pane1">
-      <div class="field"><label>Raum-Name</label>
-        <input class="inp" id="jnName" placeholder="Name des Raums" maxlength="22"></div>
-      <div class="field"><label>Passwort (falls nötig)</label>
-        <input class="inp" id="jnPass" type="password" placeholder="••••••••"></div>
+      <div class="field"><label>Raum-Name</label><input class="inp" id="jnName" placeholder="Name des Raums" maxlength="22"></div>
+      <div class="field"><label>Passwort</label><input class="inp" id="jnPass" type="password" placeholder="••••••••"></div>
       <button class="btn" onclick="joinTyped()">Beitreten</button>
       <div class="secttl" style="margin-top:22px;">Aktive Räume</div>
       <div class="list" id="roomList"><div class="empty">Suche nach Räumen…</div></div>
     </div>
-
     <div class="pane" id="pane2">
-      <div class="subbar">
-        <div class="subpill" id="subpill" style="width:calc((100% - 10px)/2)"></div>
+      <div class="subbar"><div class="subpill" id="subpill" style="width:calc((100% - 10px)/2)"></div>
         <button class="subtab on" onclick="setSub(0)">👥 Freunde</button>
-        <button class="subtab" onclick="setSub(1)">📨 Anfragen <span class="badge" id="reqBadge">0</span></button>
-      </div>
+        <button class="subtab" onclick="setSub(1)">📨 Anfragen <span class="badge" id="reqBadge">0</span></button></div>
       <div class="subpane on" id="sub0">
         <div class="field"><label>Freund hinzufügen</label>
           <div style="display:flex;gap:7px;">
             <input class="inp" id="addName" placeholder="Benutzername" maxlength="16" autocapitalize="none">
-            <button class="pill" style="padding:0 18px;" onclick="sendRequest()">Senden</button>
-          </div></div>
+            <button class="pill" style="padding:0 18px;" onclick="sendRequest()">Senden</button></div></div>
         <div class="secttl" style="margin-top:18px;">Meine Freunde</div>
         <div class="list" id="friendList"></div>
+        <div class="secttl" style="margin-top:22px;">Meine Räume</div>
+        <div class="list" id="myRoomList"></div>
       </div>
       <div class="subpane" id="sub1">
-        <div class="secttl">Eingegangene Anfragen</div>
-        <div class="list" id="reqInList"></div>
-        <div class="secttl" style="margin-top:20px;">Gesendete Anfragen</div>
-        <div class="list" id="reqOutList"></div>
+        <div class="secttl">Eingegangene Anfragen</div><div class="list" id="reqInList"></div>
+        <div class="secttl" style="margin-top:20px;">Gesendete Anfragen</div><div class="list" id="reqOutList"></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ===== ADMIN PANEL ===== -->
 <div class="screen" id="scAdmin">
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:11px;">
       <button class="iconbtn" onclick="show('scHome')">‹</button>
-      <div><h2>🛡 Admin-Panel</h2><div class="me" id="adMe">Moderation</div></div>
-    </div>
+      <div><h2>🛡 Admin-Panel</h2><div class="me" id="adMe">Signiert & verifiziert</div></div></div>
     <button class="iconbtn" onclick="refreshAdmin()">⟳</button>
   </div>
-
-  <div class="tabbar">
-    <div class="tabpill" id="apill" style="width:calc((100% - 12px)/4)"></div>
+  <div class="tabbar"><div class="tabpill" id="apill" style="width:calc((100% - 12px)/4)"></div>
     <button class="tab on" onclick="setATab(0)">Übersicht</button>
     <button class="tab" onclick="setATab(1)">Räume</button>
     <button class="tab" onclick="setATab(2)">Nutzer</button>
-    <button class="tab" onclick="setATab(3)">Senden</button>
-  </div>
-
+    <button class="tab" onclick="setATab(3)">Senden</button></div>
   <div class="body">
-    <!-- ÜBERSICHT -->
     <div class="pane on" id="apane0">
       <div class="stats">
         <div class="stat"><div class="n" id="stUsers">0</div><div class="l">Nutzer online</div></div>
         <div class="stat"><div class="n" id="stRooms">0</div><div class="l">Aktive Räume</div></div>
         <div class="stat"><div class="n" id="stBans">0</div><div class="l">Gesperrt</div></div>
-        <div class="stat"><div class="n" id="stActs">0</div><div class="l">Mod-Aktionen</div></div>
-      </div>
-      <div class="note" style="text-align:left;">🛡 <b>Fair-Play Regel:</b> Private 1:1-Chats können nicht
-        eingesehen werden. Betrittst du einen Raum als Admin, wird allen Teilnehmern ein Hinweis angezeigt.</div>
+        <div class="stat"><div class="n" id="stActs">0</div><div class="l">Mod-Aktionen</div></div></div>
+      <div class="note green" style="text-align:left;">🔐 Befehle werden signiert – Fälschung unmöglich.</div>
+      <div class="note" style="text-align:left;">🛡 Private 1:1-Chats sind für dich nicht lesbar.</div>
       <div class="secttl" style="margin-top:20px;">Moderations-Log</div>
       <div class="list" id="logList"><div class="empty">Noch keine Aktionen.</div></div>
     </div>
-
-    <!-- RÄUME -->
     <div class="pane" id="apane1">
-      <div class="secttl">Öffentliche Räume moderieren</div>
+      <div class="secttl">Räume moderieren</div>
       <div class="list" id="adRoomList"><div class="empty">Keine Räume aktiv.</div></div>
-      <div class="secttl" style="margin-top:20px;">Geschützten Raum öffnen</div>
+      <div class="secttl" style="margin-top:20px;">Raum manuell öffnen</div>
       <div class="field"><input class="inp" id="adRoomName" placeholder="Raum-Name"></div>
       <div class="field"><input class="inp" id="adRoomPass" type="password" placeholder="Passwort"></div>
       <button class="btn ghost" onclick="adminOpenLocked()">Als Admin betreten</button>
     </div>
-
-    <!-- NUTZER -->
     <div class="pane" id="apane2">
-      <div class="secttl">Online-Nutzer</div>
-      <div class="list" id="adUserList"><div class="empty">Niemand online.</div></div>
+      <div class="secttl">Online-Nutzer</div><div class="list" id="adUserList"><div class="empty">Niemand online.</div></div>
       <div class="secttl" style="margin-top:22px;">Gesperrte Nutzer</div>
       <div class="list" id="adBanList"><div class="empty">Keine Sperren.</div></div>
-      <div class="field" style="margin-top:16px;">
-        <label>Nutzer manuell sperren</label>
-        <div style="display:flex;gap:7px;">
-          <input class="inp" id="banName" placeholder="Benutzername" autocapitalize="none">
-          <button class="pill red" style="padding:0 16px;" onclick="banManual()">Sperren</button>
-        </div></div>
+      <div class="field" style="margin-top:16px;"><label>Nutzer manuell sperren</label>
+        <div style="display:flex;gap:7px;"><input class="inp" id="banName" placeholder="Benutzername" autocapitalize="none">
+        <button class="pill red" style="padding:0 16px;" onclick="banManual()">Sperren</button></div></div>
     </div>
-
-    <!-- SENDEN -->
     <div class="pane" id="apane3">
-      <div class="secttl">Ankündigung an alle Nutzer</div>
-      <div class="field"><textarea class="inp" id="annText" placeholder="z. B. Wartungsarbeiten um 18 Uhr…" maxlength="300"></textarea></div>
-      <button class="btn gold" onclick="sendAnnounce()">📢 An alle senden</button>
-      <div class="note" style="margin-top:16px;">Die Nachricht erscheint bei allen als Hinweis-Banner oben
-        und im Moderations-Log.</div>
+      <div class="secttl">Signierte Ankündigung an alle</div>
+      <div class="field"><textarea class="inp" id="annText" placeholder="z. B. Wartung um 18 Uhr…" maxlength="300"></textarea></div>
+      <button class="btn gold" onclick="sendAnnounce()">📢 Signiert senden</button>
     </div>
   </div>
 </div>
 
-<!-- ===== CHAT ===== -->
 <div class="screen" id="scChat">
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:11px;min-width:0;">
       <button class="iconbtn" onclick="leaveChat()">‹</button>
       <div style="min-width:0;" onclick="openDrawer(true)">
         <h2 id="chTitle" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw;">Chat</h2>
-        <div class="me" id="chSub">● verbunden</div></div>
-    </div>
+        <div class="me" id="chSub">● verbunden</div></div></div>
     <div style="display:flex;gap:7px;">
       <button class="iconbtn" onclick="clearHistory()">🗑</button>
       <button class="iconbtn" id="btnMembers" onclick="openDrawer(true)">👥</button>
-      <button class="iconbtn" onclick="leaveChat()" style="background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.3);">🚪</button>
-    </div>
+      <button class="iconbtn" onclick="leaveChat()" style="background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.3);">🚪</button></div>
   </div>
+  <div id="cryptoBanner">🔐 Ende-zu-Ende verschlüsselt</div>
   <div id="adminBanner">🛡 Ein Administrator beobachtet diesen Raum</div>
-
   <div id="msgs"></div>
-
   <div class="composer">
     <div class="bar" id="replyBar">
-      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-        <span style="font-size:15px;">↩︎</span>
-        <div style="min-width:0;">
-          <div style="font-size:11px;color:var(--accent);font-weight:700;" id="rpWho"></div>
-          <div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60vw;" id="rpTxt"></div>
-        </div></div><button class="x" onclick="cancelReply()">✕</button>
-    </div>
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;"><span style="font-size:15px;">↩︎</span>
+        <div style="min-width:0;"><div style="font-size:11px;color:var(--accent);font-weight:700;" id="rpWho"></div>
+        <div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60vw;" id="rpTxt"></div></div></div>
+      <button class="x" onclick="cancelReply()">✕</button></div>
     <div class="bar" id="attBar">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div id="attThumb"></div>
+      <div style="display:flex;align-items:center;gap:10px;"><div id="attThumb"></div>
         <div><div style="font-size:12px;font-weight:700;" id="attName">Datei</div>
-        <div style="font-size:11px;color:var(--muted);">Bereit zum Senden</div></div>
-      </div><button class="x" onclick="cancelAtt()">✕</button>
-    </div>
+        <div style="font-size:11px;color:var(--muted);">Bereit zum Senden</div></div></div>
+      <button class="x" onclick="cancelAtt()">✕</button></div>
     <div id="tray"></div>
     <div class="ctrls">
       <button class="cbtn" onclick="fileIn.click()">📎</button>
@@ -407,342 +355,464 @@ textarea.inp{min-height:90px;resize:none;line-height:1.45;}
       <button class="cbtn" onclick="tray.classList.toggle('on')">😀</button>
       <input class="inp" id="msgIn" placeholder="Nachricht…" autocomplete="off" oninput="typingPing()" onkeydown="if(event.key==='Enter')send()">
       <button class="cbtn" id="micBtn" onclick="toggleMic()">🎙</button>
-      <button class="cbtn send" onclick="send()">➤</button>
-    </div>
+      <button class="cbtn send" onclick="send()">➤</button></div>
   </div>
 </div>
 
 <div id="drawer" onclick="openDrawer(false)">
   <div class="panel" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px;">
-      <h3 style="font-size:16px;">Teilnehmer</h3>
-      <button class="x" style="font-size:18px;" onclick="openDrawer(false)">✕</button>
-    </div>
-    <div class="list" id="memList" style="overflow-y:auto;"></div>
-  </div>
+      <h3 style="font-size:16px;">Teilnehmer</h3><button class="x" style="font-size:18px;" onclick="openDrawer(false)">✕</button></div>
+    <div class="list" id="memList" style="overflow-y:auto;"></div></div>
+</div>
+
+<div id="popup" onclick="popupGo()">
+  <div class="avatar" id="puAv">A</div>
+  <div style="flex:1;min-width:0;"><div class="t" id="puT">Neue Nachricht</div><div class="m" id="puM"></div></div>
 </div>
 
 <div id="modal" onclick="closeModal()"><div class="card" onclick="event.stopPropagation()" id="modalCard"></div></div>
 
-<div id="blocked">
-  <div style="font-size:52px;">🚫</div>
+<div id="blocked"><div style="font-size:52px;">🚫</div>
   <div style="font-size:21px;font-weight:800;">Konto gesperrt</div>
   <div style="color:var(--muted);font-size:14px;max-width:320px;line-height:1.6;">
-    Dein Konto wurde von einem Administrator gesperrt. Wende dich an den Betreiber der App.</div>
-</div>
+    Dein Konto wurde von einem verifizierten Administrator gesperrt.</div></div>
 
 <script>
-/* ╔══════════════════════════════════════╗
-   ║  KONFIGURATION – hier anpassen!      ║
-   ╚══════════════════════════════════════╝ */
-const ADMIN_KEY = 'nexus-admin-2024';   // << DEIN GEHEIMER ADMIN-SCHLÜSSEL
-const BROKER    = 'wss://broker.emqx.io:8084/mqtt';
-const NS        = 'nexusx4';
+/* ╔═══════════════════════════════════════════════════════════╗
+   ║  ÖFFENTLICHER ADMIN-SCHLÜSSEL – darf jeder sehen.         ║
+   ║  Erzeugen: Logo auf dem Login-Screen 5× antippen.         ║
+   ╚═══════════════════════════════════════════════════════════╝ */
+const ADMIN_PUB = null;
 
-const T_PRES=NS+'/presence', T_ROOMS=NS+'/rooms', T_FRIEND=NS+'/friend', T_ADMIN=NS+'/admin';
+const BROKER='wss://broker.emqx.io:8084/mqtt';
+const NS='nexusx6';
+const T_PRES=NS+'/presence',T_ROOMS=NS+'/rooms',T_FRIEND=NS+'/friend',T_ADMIN=NS+'/admin';
 const EMO=["😀","😂","🥹","😍","😎","🤔","😴","🥳","😭","😡","👍","🙏","👏","🔥","❤️","✨","💯","🎉","🚀","⚡","🍕","🎮","👀","💀"];
 
-let me='',net=null,chatTopic='',chatMode='',chatPeer='',chatRoomName='';
+let me='',net=null,chatTopic='',chatMode='',chatPeer='',chatRoomName='',chatKey=null;
 let rooms=new Map(),users=new Map(),members=new Map();
-let friends=[],reqIn=[],reqOut=[],bans=[],modlog=[];
+let friends=[],reqIn=[],reqOut=[],bans=[],modlog=[],myRooms=[];
+let subs=new Map(),unread={},pendingOpen=null;
 let reply=null,att=null,rec=null,chunks=[],recording=false,tTimer=null;
-let seen=new Set(),histKey='',isAdmin=false,adminWatch=false;
+let seen=new Set(),nonces=new Set(),histKey='',isAdmin=false,adminWatch=false;
+let adminPubKey=null,adminPrivKey=null,myECDH=null,myPubJwk=null,audioCtx=null;
 const $=id=>document.getElementById(id);
 const tray=$('tray'),fileIn=$('fileIn');
 EMO.forEach(e=>{const s=document.createElement('span');s.textContent=e;
   s.onclick=()=>{$('msgIn').value+=e;$('msgIn').focus();};tray.appendChild(s);});
 
+const te=new TextEncoder(),td=new TextDecoder();
+const b64=u=>btoa(String.fromCharCode(...u));
+const ub64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-async function sha(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
-  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,24);}
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');}
 const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}};
 const SS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+async function sha(s){const b=await crypto.subtle.digest('SHA-256',te.encode(s));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,24);}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');}
+
+/* ══ KRYPTO ══ */
+async function deriveRoomKey(secret){
+  const base=await crypto.subtle.importKey('raw',te.encode(secret),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:te.encode(NS+'|room|salt'),
+    iterations:120000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
+async function encPayload(key,obj){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,te.encode(JSON.stringify(obj)));
+  return {e:1,iv:b64(iv),d:b64(new Uint8Array(ct))};}
+async function decPayload(key,p){
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(p.iv)},key,ub64(p.d));
+  return JSON.parse(td.decode(pt));}
+async function initECDH(){
+  const st=LS('nx_ecdh',null);
+  if(st){try{
+    const priv=await crypto.subtle.importKey('jwk',st.priv,{name:'ECDH',namedCurve:'P-256'},true,['deriveKey']);
+    myECDH={privateKey:priv};myPubJwk=st.pub;return;}catch(e){}}
+  const kp=await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveKey']);
+  myPubJwk=await crypto.subtle.exportKey('jwk',kp.publicKey);
+  SS('nx_ecdh',{pub:myPubJwk,priv:await crypto.subtle.exportKey('jwk',kp.privateKey)});
+  myECDH={privateKey:kp.privateKey};}
+async function deriveDMKey(theirJwk){
+  const their=await crypto.subtle.importKey('jwk',theirJwk,{name:'ECDH',namedCurve:'P-256'},false,[]);
+  return crypto.subtle.deriveKey({name:'ECDH',public:their},myECDH.privateKey,
+    {name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
+
+/* ══ ADMIN SIGNATUREN ══ */
+async function loadAdminPub(){if(!ADMIN_PUB)return;
+  try{adminPubKey=await crypto.subtle.importKey('jwk',ADMIN_PUB,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);}catch(e){}}
+async function loadAdminPriv(){const j=LS('nx_adminpriv',null);if(!j)return false;
+  try{adminPrivKey=await crypto.subtle.importKey('jwk',j,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);return true;}catch(e){return false;}}
+async function adminSend(o){if(!adminPrivKey)return toast('Kein Admin-Schlüssel');
+  o.by=me;o.t=Date.now();o.n=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36));
+  const body=JSON.stringify(o);
+  const sig=await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},adminPrivKey,te.encode(body));
+  net.publish(T_ADMIN,JSON.stringify({b:body,s:b64(new Uint8Array(sig))}));}
+async function onAdminRaw(m){if(!adminPubKey||!m.b||!m.s)return;
+  let ok=false;try{ok=await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},adminPubKey,ub64(m.s),te.encode(m.b));}catch(e){}
+  if(!ok)return;const d=JSON.parse(m.b);
+  if(Math.abs(Date.now()-d.t)>120000)return;
+  if(nonces.has(d.n))return;nonces.add(d.n);handleAdmin(d);}
+
+/* ══ KEYGEN ══ */
+let logoTaps=0;
+$('brandLogo').onclick=()=>{if(++logoTaps>=5){logoTaps=0;keygenModal();}};
+async function keygenModal(){
+  const kp=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);
+  const pub=await crypto.subtle.exportKey('jwk',kp.publicKey);
+  const priv=await crypto.subtle.exportKey('jwk',kp.privateKey);
+  delete pub.key_ops;delete pub.ext;
+  $('modalCard').innerHTML=`<div class="logo" style="font-size:21px;">🔐 Admin-Schlüsselpaar</div>
+    <div class="sub">1) Öffentlich → in den Code<br>2) Privat → sicher aufbewahren</div>
+    <div class="field"><label>Öffentlich → ADMIN_PUB</label>
+      <textarea class="inp mono" id="kgPub" readonly>${JSON.stringify(pub)}</textarea></div>
+    <button class="btn ghost" onclick="cp('kgPub',this)">Öffentlich kopieren</button>
+    <div class="field" style="margin-top:14px;"><label>Privat → GEHEIM</label>
+      <textarea class="inp mono" id="kgPriv" readonly>${JSON.stringify(priv)}</textarea></div>
+    <button class="btn ghost" onclick="cp('kgPriv',this)">Privat kopieren</button>
+    <button class="btn" onclick="closeModal()">Fertig</button>`;
+  $('modal').classList.add('on');}
+function cp(id,b){const t=$(id);t.select();
+  if(navigator.clipboard)navigator.clipboard.writeText(t.value);else document.execCommand('copy');
+  b.textContent='Kopiert ✓';}
 
 /* ══ KONTO ══ */
-const ACC=()=>LS('nx_acc',null), setACC=a=>SS('nx_acc',a);
+const ACC=()=>LS('nx_acc',null),setACC=a=>SS('nx_acc',a);
 let mode='login';
-function renderAuth(){
-  const a=ACC();$('auErr').textContent='';
+function renderAuth(){const a=ACC();$('auErr').textContent='';
   if(!a)mode='register';
   const reg=mode==='register',res=mode==='reset';
-  $('fPass2').style.display=reg?'block':'none';
-  $('fCode').style.display=res?'block':'none';
-  $('auUser').disabled=!!a; if(a)$('auUser').value=a.u;
+  $('fPass2').style.display=reg?'block':'none';$('fCode').style.display=res?'block':'none';
+  $('auUser').disabled=!!a;if(a)$('auUser').value=a.u;
   $('auBtn').textContent=reg?'Konto erstellen':(res?'Passwort zurücksetzen':'Anmelden');
-  $('auSub').textContent=reg?'Erstelle dein Konto — pro Gerät ist nur ein Konto möglich.'
+  $('auSub').textContent=reg?'Erstelle dein Konto — pro Gerät nur eines.'
     :(res?'Gib deinen Wiederherstellungs-Code ein.':'Willkommen zurück!');
   $('fPass').querySelector('label').textContent=res?'Neues Passwort':'Passwort';
   $('auReset').innerHTML=a?(res?'<b onclick="mode=\'login\';renderAuth()">Zurück zur Anmeldung</b>'
-    :'<b onclick="mode=\'reset\';renderAuth()">Passwort vergessen?</b>'):'';
-}
+    :'<b onclick="mode=\'reset\';renderAuth()">Passwort vergessen?</b>'):'';}
 function makeCode(){const C='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';
   for(let i=0;i<8;i++){s+=C[Math.floor(Math.random()*C.length)];if(i===3)s+='-';}return s;}
 async function submitAuth(){
-  const u=$('auUser').value.trim().toLowerCase(),p=$('auPass').value,err=$('auErr');
-  err.textContent='';
+  const u=$('auUser').value.trim().toLowerCase(),p=$('auPass').value,err=$('auErr');err.textContent='';
   if(!/^[a-z0-9_]{3,16}$/.test(u))return err.textContent='Name: 3–16 Zeichen (a–z, 0–9, _)';
   if(p.length<4)return err.textContent='Passwort: mindestens 4 Zeichen';
   const a=ACC();
   if(mode==='register'){
-    if(a)return err.textContent='Auf diesem Gerät existiert bereits ein Konto.';
+    if(a)return err.textContent='Gerät hat bereits ein Konto.';
     if($('auPass2').value!==p)return err.textContent='Passwörter stimmen nicht überein';
-    const c=makeCode();
-    setACC({u,h:await sha(u+'::'+p),rc:await sha(u+'::'+c)});
-    modalCode(c,()=>boot(u));return;
-  }
+    const c=makeCode();setACC({u,h:await sha(u+'::'+p),rc:await sha(u+'::'+c)});
+    modalCode(c,()=>boot(u));return;}
   if(mode==='reset'){
     const c=$('auCode').value.trim().toUpperCase();
-    if(await sha(a.u+'::'+c)!==a.rc)return err.textContent='Wiederherstellungs-Code ist falsch.';
-    const nc=makeCode();
-    setACC({u:a.u,h:await sha(a.u+'::'+p),rc:await sha(a.u+'::'+nc)});
-    modalCode(nc,()=>{mode='login';renderAuth();});return;
-  }
+    if(await sha(a.u+'::'+c)!==a.rc)return err.textContent='Code ist falsch.';
+    const nc=makeCode();setACC({u:a.u,h:await sha(a.u+'::'+p),rc:await sha(a.u+'::'+nc)});
+    modalCode(nc,()=>{mode='login';renderAuth();});return;}
   if(!a)return err.textContent='Kein Konto vorhanden.';
   if(await sha(a.u+'::'+p)!==a.h)return err.textContent='Falsches Passwort.';
-  boot(a.u);
-}
+  boot(a.u);}
 function modalCode(code,cb){
   $('modalCard').innerHTML=`<div class="logo" style="font-size:22px;">Wiederherstellungs-Code</div>
-    <div class="sub">Schreibe diesen Code auf!<br>Nur damit kannst du dein Passwort zurücksetzen.</div>
-    <div class="codebox"><div class="c">${code}</div></div>
-    <button class="btn ghost" onclick="navigator.clipboard&&navigator.clipboard.writeText('${code}');this.textContent='Kopiert ✓'">Code kopieren</button>
+    <div class="sub">Schreibe diesen Code auf!</div><div class="codebox"><div class="c">${code}</div></div>
+    <button class="btn ghost" onclick="navigator.clipboard&&navigator.clipboard.writeText('${code}');this.textContent='Kopiert ✓'">Kopieren</button>
     <button class="btn" id="mOk">Ich habe ihn notiert</button>`;
-  $('modal').classList.add('on');$('mOk').onclick=()=>{closeModal();cb&&cb();};
-}
+  $('modal').classList.add('on');$('mOk').onclick=()=>{closeModal();cb&&cb();};}
 function closeModal(){$('modal').classList.remove('on');}
 function showSecurity(){
   $('modalCard').innerHTML=`<div class="logo" style="font-size:22px;">Sicherheit</div>
     <div class="sub">Konto: <b style="color:#fff">${esc(me)}</b></div>
-    <button class="btn" id="mNew">Neuen Wiederherstellungs-Code</button>
-    <button class="btn gold" id="mAdm">${isAdmin?'Admin-Rechte ablegen':'Admin-Login'}</button>
+    <button class="btn" id="mNew">Neuer Wiederherstellungs-Code</button>
+    <button class="btn gold" id="mAdm">${isAdmin?'Admin-Modus beenden':'Admin-Schlüssel laden'}</button>
     <button class="btn danger" id="mDel">Konto & Daten löschen</button>
     <button class="btn ghost" onclick="closeModal()">Schließen</button>`;
   $('modal').classList.add('on');
   $('mNew').onclick=async()=>{const a=ACC(),c=makeCode();setACC({...a,rc:await sha(a.u+'::'+c)});modalCode(c);};
-  $('mAdm').onclick=()=>{
-    if(isAdmin){isAdmin=false;localStorage.removeItem('nx_isadmin');applyAdminUI();closeModal();toast('Admin-Rechte abgelegt');return;}
-    const k=prompt('Admin-Schlüssel eingeben:');
-    if(k===ADMIN_KEY){isAdmin=true;SS('nx_isadmin',true);applyAdminUI();closeModal();toast('🛡 Admin-Modus aktiv');}
-    else if(k!==null)toast('Falscher Schlüssel');
-  };
-  $('mDel').onclick=()=>{if(confirm('Wirklich alles löschen?')){localStorage.clear();location.reload();}};
-}
-function applyAdminUI(){
-  $('btnAdmin').style.display=isAdmin?'flex':'none';
+  $('mAdm').onclick=()=>{if(isAdmin){isAdmin=false;adminPrivKey=null;localStorage.removeItem('nx_adminpriv');
+      applyAdminUI();closeModal();toast('Admin-Modus beendet');return;}adminLoginModal();};
+  $('mDel').onclick=()=>{if(confirm('Wirklich alles löschen?')){localStorage.clear();location.reload();}};}
+function adminLoginModal(){
+  $('modalCard').innerHTML=`<div class="logo" style="font-size:21px;">🛡 Admin-Anmeldung</div>
+    <div class="sub">Füge deinen <b>privaten</b> Schlüssel ein.</div>
+    <div class="field"><textarea class="inp mono" id="apIn" placeholder='{"kty":"EC",...}'></textarea></div>
+    <div class="err" id="apErr"></div>
+    <button class="btn gold" id="apGo">Laden</button>
+    <button class="btn ghost" onclick="closeModal()">Abbrechen</button>`;
+  $('modal').classList.add('on');
+  $('apGo').onclick=async()=>{try{
+    const j=JSON.parse($('apIn').value.trim());
+    const k=await crypto.subtle.importKey('jwk',j,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);
+    if(!adminPubKey){$('apErr').textContent='Kein ADMIN_PUB im Code hinterlegt.';return;}
+    const pr=await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},k,te.encode('probe'));
+    const ok=await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},adminPubKey,pr,te.encode('probe'));
+    if(!ok){$('apErr').textContent='Schlüssel passt nicht.';return;}
+    adminPrivKey=k;SS('nx_adminpriv',j);isAdmin=true;applyAdminUI();closeModal();toast('🛡 Admin verifiziert');
+  }catch(e){$('apErr').textContent='Ungültiger Schlüssel.';}};}
+function applyAdminUI(){$('btnAdmin').style.display=isAdmin?'flex':'none';
   $('adminTag').style.display=isAdmin?'inline-block':'none';
-  $('adMe').textContent=isAdmin?('Angemeldet als '+me):'Moderation';
-}
+  $('adMe').textContent=isAdmin?('Signiert als '+me):'Signiert & verifiziert';}
 function logout(){location.reload();}
-window.addEventListener('load',renderAuth);
+window.addEventListener('load',()=>{loadAdminPub();renderAuth();});
 
-/* ══ BOOT ══ */
-function boot(user){
+/* ══════ BENACHRICHTIGUNGEN ══════ */
+function notifyState(){
+  const b=$('btnBell');
+  if(!('Notification' in window)){b.textContent='🔕';return;}
+  const g=Notification.permission==='granted';
+  b.textContent=g?'🔔':'🔕';b.classList.toggle('live',g);}
+function askNotify(){
+  if(!('Notification' in window))return toast('Dein Browser unterstützt keine Mitteilungen');
+  if(Notification.permission==='granted')return toast('🔔 Benachrichtigungen sind aktiv');
+  Notification.requestPermission().then(p=>{notifyState();
+    toast(p==='granted'?'🔔 Benachrichtigungen aktiviert':'Mitteilungen wurden abgelehnt');});}
+function beep(){
+  try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.connect(g);g.connect(audioCtx.destination);o.type='sine';
+    o.frequency.setValueAtTime(880,audioCtx.currentTime);
+    o.frequency.setValueAtTime(1180,audioCtx.currentTime+.08);
+    g.gain.setValueAtTime(.001,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.18,audioCtx.currentTime+.02);
+    g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.3);
+    o.start();o.stop(audioCtx.currentTime+.32);}catch(e){}}
+function notify(title,body,openKey){
+  beep();if(navigator.vibrate)navigator.vibrate([45,40,45]);
+  if('Notification' in window&&Notification.permission==='granted'&&document.hidden){
+    try{const n=new Notification(title,{body,tag:openKey||title});
+      n.onclick=()=>{window.focus();if(openKey)openFromKey(openKey);n.close();};}catch(e){}}
+  showPopup(title,body,openKey);}
+let puTimer=null;
+function showPopup(t,m,key){
+  $('puAv').textContent=(t[0]||'?').toUpperCase();
+  $('puT').textContent=t;$('puM').textContent=m;pendingOpen=key;
+  $('popup').classList.add('on');clearTimeout(puTimer);
+  puTimer=setTimeout(()=>$('popup').classList.remove('on'),4200);}
+function popupGo(){$('popup').classList.remove('on');if(pendingOpen)openFromKey(pendingOpen);}
+function openFromKey(k){
+  const [kind,...r]=k.split(':');const name=r.join(':');
+  if(kind==='dm')openDM(name);
+  else{const rm=myRooms.find(x=>x.name.toLowerCase()===name.toLowerCase());
+    if(rm){adminWatch=false;openRoom(rm.name,rm.pass);}}}
+
+/* ══════ BOOT ══════ */
+async function boot(user){
   me=user;
   friends=LS('nx_friends',[]);reqIn=LS('nx_reqin',[]);reqOut=LS('nx_reqout',[]);
-  bans=LS('nx_bans',[]);modlog=LS('nx_modlog',[]);isAdmin=LS('nx_isadmin',false);
+  bans=LS('nx_bans',[]);modlog=LS('nx_modlog',[]);myRooms=LS('nx_myrooms',[]);
+  unread=LS('nx_unread',{});
+  await initECDH();await loadAdminPub();
+  if(await loadAdminPriv())isAdmin=true;
   if(bans.includes(me)){$('blocked').classList.add('on');return;}
-  $('meLabel').textContent='● '+me+' · online';
-  applyAdminUI();show('scHome');drawAll();
-  net=mqtt.connect(BROKER,{clean:true,reconnectPeriod:2000});
-  net.on('connect',()=>{net.subscribe([T_PRES,T_ROOMS,T_FRIEND,T_ADMIN]);ping();resend();
-    setInterval(ping,9000);setInterval(resend,12000);});
-  net.on('message',(t,pl)=>{
+  $('meLabel').textContent='● '+me+' · verschlüsselt';
+  applyAdminUI();notifyState();show('scHome');drawAll();
+
+  const cid='nx6_'+await sha('client|'+me);
+  net=mqtt.connect(BROKER,{clientId:cid,clean:false,reconnectPeriod:2000,keepalive:30});
+
+  net.on('connect',()=>{
+    net.subscribe([T_PRES,T_ROOMS,T_FRIEND,T_ADMIN],{qos:0});
+    resubscribeAll();ping();resend();});
+  net.on('message',async(t,pl)=>{
     let d;try{d=JSON.parse(pl.toString())}catch(e){return}
-    if(t===T_PRES){if(d.u&&d.u!==me&&!bans.includes(d.u)){users.set(d.u,{t:Date.now(),admin:!!d.admin});drawAll();}}
-    else if(t===T_ROOMS){if(d.name)rooms.set(d.name.toLowerCase(),{name:d.name,lock:!!d.lock,t:Date.now()}),drawRooms(),drawAdminRooms();}
-    else if(t===T_FRIEND)onFriendMsg(d);
-    else if(t===T_ADMIN)onAdminMsg(d);
-    else if(t===chatTopic)onChat(d);
+    if(t===T_PRES){
+      if(d.u&&d.u!==me&&!bans.includes(d.u)){
+        users.set(d.u,{t:Date.now(),admin:!!d.admin,pk:d.pk});
+        if(d.pk&&!LS('nx_pk_'+d.u,null)){SS('nx_pk_'+d.u,d.pk);resubscribeAll();}
+        drawAll();}
+      return;}
+    if(t===T_ROOMS){if(d.name){rooms.set(d.name.toLowerCase(),{name:d.name,lock:!!d.lock,t:Date.now()});
+      drawRooms();drawAdminRooms();}return;}
+    if(t===T_FRIEND)return onFriendMsg(d);
+    if(t===T_ADMIN)return onAdminRaw(d);
+    const s=subs.get(t);if(!s)return;
+    let msg=d;
+    if(d.e){try{msg=await decPayload(s.key,d);}catch(e){return;}}
+    if(t===chatTopic)onChat(msg);else background(s,msg);
   });
   setInterval(()=>{const n=Date.now();
     users.forEach((v,k)=>{if(n-v.t>30000)users.delete(k)});
     rooms.forEach((v,k)=>{if(n-v.t>70000)rooms.delete(k)});
     members.forEach((v,k)=>{if(k!==me&&n-v.t>45000)members.delete(k)});
     drawAll();drawMembers();if($('scAdmin').classList.contains('active'))refreshAdmin();},8000);
+  setInterval(ping,9000);setInterval(resend,12000);
 }
-function ping(){if(net&&net.connected)net.publish(T_PRES,JSON.stringify({u:me,admin:isAdmin}));}
+function ping(){if(net&&net.connected)net.publish(T_PRES,JSON.stringify({u:me,admin:isAdmin&&adminWatch,pk:myPubJwk}));}
 
-/* ══ ADMIN-NACHRICHTEN (empfangen alle) ══ */
-function onAdminMsg(d){
-  if(d.k==='ann'){
-    addLog('📢 Ankündigung von '+d.by+': '+d.text);
+/* ══════ HINTERGRUND-ABOS ══════ */
+async function resubscribeAll(){
+  if(!net)return;
+  for(const f of friends){
+    const pk=LS('nx_pk_'+f,null);if(!pk)continue;
+    const t=NS+'/d/'+await sha([me,f].sort().join('<>'));
+    if(subs.has(t))continue;
+    try{subs.set(t,{mode:'dm',peer:f,key:await deriveDMKey(pk)});net.subscribe(t,{qos:1});}catch(e){}
+  }
+  for(const r of myRooms){
+    const t=NS+'/r/'+await sha(r.name.toLowerCase()+'##'+(r.pass||''));
+    if(subs.has(t))continue;
+    subs.set(t,{mode:'room',room:r.name,key:await deriveRoomKey(NS+'|'+r.name.toLowerCase()+'|'+(r.pass||'open'))});
+    net.subscribe(t,{qos:1});
+  }
+}
+const dmHist=u=>'nx_h_dm_'+[me,u].sort().join('_');
+const roomHist=n=>'nx_h_room_'+n.toLowerCase();
+function pushHist(key,d){let h=LS(key,[]);
+  if(h.some(x=>x.id===d.id))return false;
+  h.push(d);while(h.length>160)h.shift();
+  try{SS(key,h)}catch(e){while(h.length>40)h.shift();SS(key,h);}
+  return true;}
+function preview(d){
+  return d.type==='image'?'📷 Foto':d.type==='video'?'🎬 Video':
+    d.type==='audio'?'🎙 Sprachnachricht':(d.text||'Nachricht');}
+function background(s,d){
+  if(d.k!=='msg'||d.u===me||bans.includes(d.u))return;
+  const key=s.mode==='dm'?('dm:'+s.peer):('room:'+s.room);
+  const hk=s.mode==='dm'?dmHist(s.peer):roomHist(s.room);
+  if(!pushHist(hk,d))return;
+  unread[key]=(unread[key]||0)+1;SS('nx_unread',unread);
+  drawAll();
+  notify(s.mode==='dm'?d.u:(d.u+' · '+s.room),preview(d),key);
+}
+function clearUnread(key){if(unread[key]){delete unread[key];SS('nx_unread',unread);drawAll();}}
+function totalUnread(){return Object.values(unread).reduce((a,b)=>a+b,0);}
+
+/* ══════ ADMIN-AKTIONEN ══════ */
+function handleAdmin(d){
+  if(d.k==='ann'){addLog('📢 '+d.by+': '+d.text);notify('📢 Ankündigung',d.text,null);
     $('modalCard').innerHTML=`<div class="logo" style="font-size:21px;">📢 Ankündigung</div>
       <div class="sub" style="color:#fcd34d;font-size:15px;white-space:pre-wrap;">${esc(d.text)}</div>
-      <div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:10px;">von ${esc(d.by)}</div>
+      <div style="text-align:center;font-size:11px;color:#6ee7b7;margin-bottom:10px;">✓ Signatur gültig · ${esc(d.by)}</div>
       <button class="btn ghost" onclick="closeModal()">OK</button>`;
-    $('modal').classList.add('on');
-  }
-  if(d.k==='ban'){
-    if(!bans.includes(d.user)){bans.push(d.user);SS('nx_bans',bans);}
-    addLog('🚫 '+d.by+' hat '+d.user+' gesperrt');
-    if(d.user===me){$('blocked').classList.add('on');}
-    users.delete(d.user);members.delete(d.user);drawAll();
-  }
-  if(d.k==='unban'){
-    bans=bans.filter(b=>b!==d.user);SS('nx_bans',bans);
-    addLog('✅ '+d.by+' hat '+d.user+' entsperrt');drawAll();
-  }
-  if(d.k==='kick'){
-    addLog('👢 '+d.by+' hat '+d.user+' aus "'+d.room+'" entfernt');
+    $('modal').classList.add('on');}
+  if(d.k==='ban'){if(!bans.includes(d.user)){bans.push(d.user);SS('nx_bans',bans);}
+    addLog('🚫 '+d.by+' sperrte '+d.user);
+    if(d.user===me)$('blocked').classList.add('on');
+    users.delete(d.user);members.delete(d.user);drawAll();}
+  if(d.k==='unban'){bans=bans.filter(b=>b!==d.user);SS('nx_bans',bans);
+    addLog('✅ '+d.by+' entsperrte '+d.user);drawAll();}
+  if(d.k==='kick'){addLog('👢 '+d.by+' entfernte '+d.user+' aus "'+d.room+'"');
     if(d.user===me&&chatRoomName&&chatRoomName.toLowerCase()===String(d.room).toLowerCase()){
-      leaveChat();toast('👢 Du wurdest aus dem Raum entfernt');
-    }
-  }
-}
-function addLog(t){
-  modlog.unshift({t,ts:new Date().toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})});
-  while(modlog.length>60)modlog.pop();
-  SS('nx_modlog',modlog);drawLog();
-}
-
-/* ══ ADMIN-AKTIONEN ══ */
-function adminPub(o){o.by=me;net.publish(T_ADMIN,JSON.stringify(o));}
-function sendAnnounce(){
-  const t=$('annText').value.trim();if(!t)return toast('Bitte Text eingeben');
-  adminPub({k:'ann',text:t});$('annText').value='';toast('📢 Gesendet');
-}
-function banUser(u){
-  if(u===me)return toast('Du kannst dich nicht selbst sperren');
-  if(!confirm('"'+u+'" wirklich global sperren?'))return;
-  adminPub({k:'ban',user:u});
-}
-function unbanUser(u){adminPub({k:'unban',user:u});}
+      leaveChat();toast('👢 Du wurdest entfernt');}}}
+function addLog(t){modlog.unshift({t,ts:new Date().toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})});
+  while(modlog.length>60)modlog.pop();SS('nx_modlog',modlog);drawLog();}
+function sendAnnounce(){const t=$('annText').value.trim();if(!t)return toast('Text fehlt');
+  adminSend({k:'ann',text:t});$('annText').value='';toast('📢 Gesendet');}
+function banUser(u){if(u===me)return toast('Nicht dich selbst');
+  if(!confirm('"'+u+'" sperren?'))return;adminSend({k:'ban',user:u});}
+function unbanUser(u){adminSend({k:'unban',user:u});}
 function banManual(){const u=$('banName').value.trim().toLowerCase();if(!u)return;$('banName').value='';banUser(u);}
-function kickUser(u){
-  if(!chatRoomName)return toast('Nur innerhalb eines Raums möglich');
-  adminPub({k:'kick',user:u,room:chatRoomName});toast('👢 '+u+' entfernt');
-}
-function adminOpenLocked(){
-  const n=$('adRoomName').value.trim();if(!n)return toast('Raum-Name fehlt');
-  adminWatch=true;openRoom(n,$('adRoomPass').value);
-}
-function refreshAdmin(){
-  $('stUsers').textContent=users.size+1;
-  $('stRooms').textContent=rooms.size;
-  $('stBans').textContent=bans.length;
-  $('stActs').textContent=modlog.length;
-  drawAdminRooms();drawAdminUsers();drawLog();
-}
-function drawAdminRooms(){
-  const el=$('adRoomList');if(!el)return;
-  const pub=[...rooms.values()];
-  if(!pub.length){el.innerHTML='<div class="empty">Keine Räume aktiv.</div>';return;}
-  el.innerHTML='';
-  pub.sort((a,b)=>a.name.localeCompare(b.name)).forEach(r=>{
+function kickUser(u){if(!chatRoomName)return toast('Nur in Räumen');
+  adminSend({k:'kick',user:u,room:chatRoomName});toast('👢 '+u+' entfernt');}
+function adminOpenLocked(){const n=$('adRoomName').value.trim();if(!n)return toast('Name fehlt');
+  adminWatch=true;openRoom(n,$('adRoomPass').value);}
+function refreshAdmin(){$('stUsers').textContent=users.size+1;$('stRooms').textContent=rooms.size;
+  $('stBans').textContent=bans.length;$('stActs').textContent=modlog.length;
+  drawAdminRooms();drawAdminUsers();drawLog();}
+function drawAdminRooms(){const el=$('adRoomList');if(!el)return;const p=[...rooms.values()];
+  if(!p.length){el.innerHTML='<div class="empty">Keine Räume aktiv.</div>';return;}
+  el.innerHTML='';p.sort((a,b)=>a.name.localeCompare(b.name)).forEach(r=>{
     const d=document.createElement('div');d.className='item';
     d.innerHTML=`<div class="avatar ${r.lock?'off':''}">${r.lock?'🔒':'#'}</div>
-      <div class="meta"><h4>${esc(r.name)}</h4><span>${r.lock?'Passwort nötig':'Öffentlich'}</span></div>
-      <button class="pill gold">🛡 Beobachten</button>`;
-    d.querySelector('.pill').onclick=()=>{
-      let p='';
-      if(r.lock){p=prompt('Passwort für "'+r.name+'":');if(p===null)return;}
-      adminWatch=true;openRoom(r.name,p);
-    };
-    el.appendChild(d);});
-}
-function drawAdminUsers(){
-  const el=$('adUserList'),bl=$('adBanList');if(!el)return;
-  const list=[...users.keys()].sort();
-  if(!list.length)el.innerHTML='<div class="empty">Niemand online.</div>';
-  else{el.innerHTML='';list.forEach(u=>{
-    const info=users.get(u);
+      <div class="meta"><h4>${esc(r.name)}</h4><span>${r.lock?'Passwort nötig':'Offen'}</span></div>
+      <button class="pill gold">🛡 Betreten</button>`;
+    d.querySelector('.pill').onclick=()=>{let pw='';
+      if(r.lock){pw=prompt('Passwort für "'+r.name+'":');if(pw===null)return;}
+      adminWatch=true;openRoom(r.name,pw);};el.appendChild(d);});}
+function drawAdminUsers(){const el=$('adUserList'),bl=$('adBanList');if(!el)return;
+  const l=[...users.keys()].sort();
+  if(!l.length)el.innerHTML='<div class="empty">Niemand online.</div>';
+  else{el.innerHTML='';l.forEach(u=>{const i=users.get(u);
     const d=document.createElement('div');d.className='item';
-    d.innerHTML=`<div class="avatar ${info.admin?'gold':''}">${esc(u[0].toUpperCase())}</div>
-      <div class="meta"><h4>${esc(u)} ${info.admin?'🛡':''}</h4><span>online</span></div>
+    d.innerHTML=`<div class="avatar ${i.admin?'gold':''}">${esc(u[0].toUpperCase())}</div>
+      <div class="meta"><h4>${esc(u)} ${i.admin?'🛡':''}</h4><span>online</span></div>
       <button class="pill red">Sperren</button>`;
-    d.querySelector('.pill').onclick=()=>banUser(u);
-    el.appendChild(d);});}
+    d.querySelector('.pill').onclick=()=>banUser(u);el.appendChild(d);});}
   if(!bans.length)bl.innerHTML='<div class="empty">Keine Sperren.</div>';
-  else{bl.innerHTML='';bans.forEach(u=>{
-    const d=document.createElement('div');d.className='item';
-    d.innerHTML=`<div class="avatar ban">🚫</div>
-      <div class="meta"><h4>${esc(u)}</h4><span>gesperrt</span></div>
+  else{bl.innerHTML='';bans.forEach(u=>{const d=document.createElement('div');d.className='item';
+    d.innerHTML=`<div class="avatar ban">🚫</div><div class="meta"><h4>${esc(u)}</h4><span>gesperrt</span></div>
       <button class="pill green">Entsperren</button>`;
-    d.querySelector('.pill').onclick=()=>unbanUser(u);
-    bl.appendChild(d);});}
-}
-function drawLog(){
-  const el=$('logList');if(!el)return;
+    d.querySelector('.pill').onclick=()=>unbanUser(u);bl.appendChild(d);});}}
+function drawLog(){const el=$('logList');if(!el)return;
   if(!modlog.length){el.innerHTML='<div class="empty">Noch keine Aktionen.</div>';return;}
-  el.innerHTML='';
-  modlog.forEach(l=>{const d=document.createElement('div');d.className='logline';
-    d.innerHTML=`<b style="color:#fcd34d">${l.ts}</b> — ${esc(l.t)}`;el.appendChild(d);});
-}
-function setATab(i){
-  document.querySelectorAll('#scAdmin .tab').forEach((t,n)=>t.classList.toggle('on',n===i));
+  el.innerHTML='';modlog.forEach(l=>{const d=document.createElement('div');d.className='logline';
+    d.innerHTML=`<b style="color:#fcd34d">${l.ts}</b> — ${esc(l.t)}`;el.appendChild(d);});}
+function setATab(i){document.querySelectorAll('#scAdmin .tab').forEach((t,n)=>t.classList.toggle('on',n===i));
   document.querySelectorAll('#scAdmin .pane').forEach((p,n)=>p.classList.toggle('on',n===i));
-  $('apill').style.transform=`translate3d(${i*100}%,0,0)`;
-}
+  $('apill').style.transform=`translate3d(${i*100}%,0,0)`;}
 
-/* ══ FREUNDE ══ */
-function sendRequest(){
-  const n=$('addName').value.trim().toLowerCase();if(!n)return;
+/* ══════ FREUNDE ══════ */
+function sendRequest(){const n=$('addName').value.trim().toLowerCase();if(!n)return;
   if(n===me)return toast('Das bist du selbst 🙂');
-  if(bans.includes(n))return toast('Dieser Nutzer ist gesperrt');
+  if(bans.includes(n))return toast('Nutzer gesperrt');
   if(friends.includes(n))return toast(n+' ist bereits dein Freund');
   if(reqOut.includes(n))return toast('Anfrage läuft bereits');
   if(reqIn.includes(n))return acceptReq(n);
   reqOut.push(n);SS('nx_reqout',reqOut);$('addName').value='';
-  net.publish(T_FRIEND,JSON.stringify({k:'req',from:me,to:n}));
-  drawAll();toast('Anfrage an '+n+' gesendet');
-}
+  net.publish(T_FRIEND,JSON.stringify({k:'req',from:me,to:n}));drawAll();toast('Anfrage an '+n+' gesendet');}
 function resend(){if(net&&net.connected)reqOut.forEach(n=>net.publish(T_FRIEND,JSON.stringify({k:'req',from:me,to:n})));}
 function onFriendMsg(d){
   if(d.to!==me||bans.includes(d.from))return;
   if(d.k==='req'){
     if(friends.includes(d.from))return net.publish(T_FRIEND,JSON.stringify({k:'acc',from:me,to:d.from}));
-    if(!reqIn.includes(d.from)){reqIn.push(d.from);SS('nx_reqin',reqIn);drawAll();toast('📨 Neue Anfrage von '+d.from);}
-  }
-  if(d.k==='acc'){
-    reqOut=reqOut.filter(x=>x!==d.from);SS('nx_reqout',reqOut);
-    if(!friends.includes(d.from)){friends.push(d.from);SS('nx_friends',friends);toast('✅ '+d.from+' ist jetzt dein Freund');}
-    drawAll();
-  }
-  if(d.k==='dec'){reqOut=reqOut.filter(x=>x!==d.from);SS('nx_reqout',reqOut);drawAll();toast('❌ '+d.from+' hat abgelehnt');}
-}
-function acceptReq(n){
-  reqIn=reqIn.filter(x=>x!==n);SS('nx_reqin',reqIn);
+    if(!reqIn.includes(d.from)){reqIn.push(d.from);SS('nx_reqin',reqIn);drawAll();
+      notify('📨 Freundschaftsanfrage',d.from+' möchte dein Freund sein',null);}}
+  if(d.k==='acc'){reqOut=reqOut.filter(x=>x!==d.from);SS('nx_reqout',reqOut);
+    if(!friends.includes(d.from)){friends.push(d.from);SS('nx_friends',friends);
+      notify('✅ Neuer Freund',d.from+' hat angenommen',null);resubscribeAll();}
+    drawAll();}
+  if(d.k==='dec'){reqOut=reqOut.filter(x=>x!==d.from);SS('nx_reqout',reqOut);drawAll();toast('❌ '+d.from+' hat abgelehnt');}}
+function acceptReq(n){reqIn=reqIn.filter(x=>x!==n);SS('nx_reqin',reqIn);
   reqOut=reqOut.filter(x=>x!==n);SS('nx_reqout',reqOut);
   if(!friends.includes(n)){friends.push(n);SS('nx_friends',friends);}
   net.publish(T_FRIEND,JSON.stringify({k:'acc',from:me,to:n}));
-  drawAll();toast('✅ '+n+' hinzugefügt');
-}
+  resubscribeAll();drawAll();toast('✅ '+n+' hinzugefügt');}
 function declineReq(n){reqIn=reqIn.filter(x=>x!==n);SS('nx_reqin',reqIn);
   net.publish(T_FRIEND,JSON.stringify({k:'dec',from:me,to:n}));drawAll();}
 function cancelOut(n){reqOut=reqOut.filter(x=>x!==n);SS('nx_reqout',reqOut);drawAll();}
 function removeFriend(n){if(!confirm(n+' entfernen?'))return;
-  friends=friends.filter(f=>f!==n);SS('nx_friends',friends);drawAll();}
+  friends=friends.filter(f=>f!==n);SS('nx_friends',friends);clearUnread('dm:'+n);drawAll();}
+function leaveMyRoom(n){if(!confirm('Raum "'+n+'" aus der Liste entfernen?'))return;
+  myRooms=myRooms.filter(r=>r.name.toLowerCase()!==n.toLowerCase());SS('nx_myrooms',myRooms);
+  clearUnread('room:'+n);drawAll();}
 
-/* ══ UI ══ */
-function drawAll(){drawFriends();drawReqs();drawRooms();updateBadges();}
-function updateBadges(){const n=reqIn.length;
-  [$('reqBadge'),$('tabBadge')].forEach(b=>{b.textContent=n;b.classList.toggle('on',n>0);});}
-function lastMsg(peer){
-  const h=LS('nx_h_dm_'+[me,peer].sort().join('_'),[]);if(!h.length)return null;
-  const m=h[h.length-1];
-  const t=m.type==='image'?'📷 Foto':m.type==='video'?'🎬 Video':m.type==='audio'?'🎙 Sprachnachricht':m.text;
-  return (m.u===me?'Du: ':'')+t;
-}
+/* ══════ UI ══════ */
+function drawAll(){drawFriends();drawMyRooms();drawReqs();drawRooms();updateBadges();}
+function updateBadges(){
+  const r=reqIn.length;$('reqBadge').textContent=r;$('reqBadge').classList.toggle('on',r>0);
+  const t=totalUnread()+r;$('tabBadge').textContent=t;$('tabBadge').classList.toggle('on',t>0);}
+function lastMsg(key){const h=LS(key,[]);if(!h.length)return null;
+  const m=h[h.length-1];return (m.u===me?'Du: ':'')+preview(m);}
 function drawFriends(){
   const el=$('friendList');if(!el)return;
-  if(!friends.length){el.innerHTML='<div class="empty">Noch keine Freunde.<br>Gib oben einen Benutzernamen ein<br>und sende eine Anfrage.</div>';return;}
+  if(!friends.length){el.innerHTML='<div class="empty">Noch keine Freunde.<br>Gib oben einen Benutzernamen ein.</div>';return;}
   el.innerHTML='';
-  friends.slice().sort().forEach(u=>{
-    const on=users.has(u),p=lastMsg(u);
-    const d=document.createElement('div');d.className='item';
+  friends.slice().sort((a,b)=>(unread['dm:'+b]||0)-(unread['dm:'+a]||0)||a.localeCompare(b)).forEach(u=>{
+    const on=users.has(u),p=lastMsg(dmHist(u)),un=unread['dm:'+u]||0;
+    const d=document.createElement('div');d.className='item'+(un?' unread':'');
     d.innerHTML=`<div class="avatar ${on?'':'off'}">${esc(u[0].toUpperCase())}</div>
-      <div class="meta"><h4>${esc(u)}</h4><span>${p?esc(p.slice(0,38)):(on?'online':'offline')}</span></div>
-      <div class="dot ${on?'':'off'}"></div><button class="pill gray" style="margin-left:4px;">✕</button>`;
+      <div class="meta"><h4>${esc(u)}</h4><span>${p?esc(p.slice(0,36)):(on?'online':'offline')}</span></div>
+      ${un?`<span class="badge on">${un}</span>`:`<div class="dot ${on?'':'off'}"></div>`}
+      <button class="pill gray" style="margin-left:4px;">✕</button>`;
     d.querySelector('.meta').onclick=()=>openDM(u);
     d.querySelector('.avatar').onclick=()=>openDM(u);
     d.querySelector('.pill').onclick=e=>{e.stopPropagation();removeFriend(u);};
-    el.appendChild(d);});
-}
-function drawReqs(){
-  const i=$('reqInList'),o=$('reqOutList');if(!i)return;
+    el.appendChild(d);});}
+function drawMyRooms(){
+  const el=$('myRoomList');if(!el)return;
+  if(!myRooms.length){el.innerHTML='<div class="empty">Noch keine Räume betreten.</div>';return;}
+  el.innerHTML='';
+  myRooms.slice().sort((a,b)=>(unread['room:'+b.name]||0)-(unread['room:'+a.name]||0)).forEach(r=>{
+    const un=unread['room:'+r.name]||0,p=lastMsg(roomHist(r.name));
+    const d=document.createElement('div');d.className='item'+(un?' unread':'');
+    d.innerHTML=`<div class="avatar">${r.pass?'🔒':'#'}</div>
+      <div class="meta"><h4>${esc(r.name)}</h4><span>${p?esc(p.slice(0,36)):'Keine Nachrichten'}</span></div>
+      ${un?`<span class="badge on">${un}</span>`:''}
+      <button class="pill gray" style="margin-left:4px;">✕</button>`;
+    d.querySelector('.meta').onclick=()=>{adminWatch=false;openRoom(r.name,r.pass);};
+    d.querySelector('.avatar').onclick=()=>{adminWatch=false;openRoom(r.name,r.pass);};
+    d.querySelector('.pill').onclick=e=>{e.stopPropagation();leaveMyRoom(r.name);};
+    el.appendChild(d);});}
+function drawReqs(){const i=$('reqInList'),o=$('reqOutList');if(!i)return;
   if(!reqIn.length)i.innerHTML='<div class="empty">Keine neuen Anfragen.</div>';
-  else{i.innerHTML='';reqIn.forEach(u=>{const d=document.createElement('div');d.className='item';
+  else{i.innerHTML='';reqIn.forEach(u=>{const d=document.createElement('div');d.className='item unread';
     d.innerHTML=`<div class="avatar">${esc(u[0].toUpperCase())}</div>
       <div class="meta"><h4>${esc(u)}</h4><span>möchte dein Freund sein</span></div>
       <button class="pill green">✓</button><button class="pill red">✕</button>`;
@@ -753,94 +823,91 @@ function drawReqs(){
     d.innerHTML=`<div class="avatar off">${esc(u[0].toUpperCase())}</div>
       <div class="meta"><h4>${esc(u)}</h4><span>wartet auf Bestätigung…</span></div>
       <button class="pill gray">Abbrechen</button>`;
-    d.querySelector('.pill').onclick=()=>cancelOut(u);o.appendChild(d);});}
-}
-function drawRooms(){
-  const el=$('roomList');if(!el)return;
+    d.querySelector('.pill').onclick=()=>cancelOut(u);o.appendChild(d);});}}
+function drawRooms(){const el=$('roomList');if(!el)return;
   if(!rooms.size){el.innerHTML='<div class="empty">Keine aktiven Räume.<br>Erstelle den ersten!</div>';return;}
   el.innerHTML='';
   [...rooms.values()].sort((a,b)=>a.name.localeCompare(b.name)).forEach(r=>{
     const d=document.createElement('div');d.className='item';
     d.innerHTML=`<div class="avatar">${r.lock?'🔒':'#'}</div>
-      <div class="meta"><h4>${esc(r.name)}</h4><span>${r.lock?'Passwortgeschützt':'Öffentlich'}</span></div>
+      <div class="meta"><h4>${esc(r.name)}</h4><span>${r.lock?'Verschlüsselt · Passwort':'Offen'}</span></div>
       <button class="pill">Beitreten</button>`;
     d.querySelector('.pill').onclick=()=>{let p='';
-      if(r.lock){p=prompt('Passwort für "'+r.name+'":');if(p===null)return;}openRoom(r.name,p);};
-    el.appendChild(d);});
-}
-function setTab(i){
-  document.querySelectorAll('#scHome .tab').forEach((t,n)=>t.classList.toggle('on',n===i));
+      if(r.lock){p=prompt('Passwort für "'+r.name+'":');if(p===null)return;}
+      adminWatch=false;openRoom(r.name,p);};el.appendChild(d);});}
+function setTab(i){document.querySelectorAll('#scHome .tab').forEach((t,n)=>t.classList.toggle('on',n===i));
   document.querySelectorAll('#scHome .pane').forEach((p,n)=>p.classList.toggle('on',n===i));
-  $('pill').style.transform=`translate3d(${i*100}%,0,0)`;
-}
-function setSub(i){
-  document.querySelectorAll('.subtab').forEach((t,n)=>t.classList.toggle('on',n===i));
+  $('pill').style.transform=`translate3d(${i*100}%,0,0)`;}
+function setSub(i){document.querySelectorAll('.subtab').forEach((t,n)=>t.classList.toggle('on',n===i));
   document.querySelectorAll('.subpane').forEach((p,n)=>p.classList.toggle('on',n===i));
-  $('subpill').style.transform=`translate3d(${i*100}%,0,0)`;
-}
-function toast(t){
-  const d=document.createElement('div');
-  d.style.cssText='position:fixed;left:50%;top:calc(env(safe-area-inset-top,20px) + 58px);transform:translateX(-50%);z-index:120;background:rgba(34,211,238,.18);border:1px solid rgba(34,211,238,.4);color:#a5f3fc;padding:10px 18px;border-radius:14px;font-size:13px;backdrop-filter:blur(10px);max-width:86vw;text-align:center;';
-  d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200);
-}
+  $('subpill').style.transform=`translate3d(${i*100}%,0,0)`;}
+function toast(t){const d=document.createElement('div');
+  d.style.cssText='position:fixed;left:50%;top:calc(env(safe-area-inset-top,20px) + 58px);transform:translateX(-50%);z-index:119;background:rgba(34,211,238,.18);border:1px solid rgba(34,211,238,.4);color:#a5f3fc;padding:10px 18px;border-radius:14px;font-size:13px;backdrop-filter:blur(10px);max-width:86vw;text-align:center;';
+  d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200);}
 
-/* ══ VERLAUF ══ */
-function saveMsg(d){
-  if(!histKey)return;let h=LS(histKey,[]);h.push(d);
-  while(h.length>160)h.shift();
-  try{SS(histKey,h)}catch(e){while(h.length>40)h.shift();SS(histKey,h);}
-}
-function loadHistory(){
-  const h=LS(histKey,[]);if(!h.length)return;
+/* ══════ VERLAUF ══════ */
+function saveMsg(d){if(histKey)pushHist(histKey,d);}
+function loadHistory(){const h=LS(histKey,[]);if(!h.length)return;
   const a=document.createElement('div');a.className='divider';a.textContent='Bisheriger Verlauf';$('msgs').appendChild(a);
   h.forEach(m=>{seen.add(m.id);bubble(m,true);});
   const b=document.createElement('div');b.className='divider';b.textContent='Jetzt';$('msgs').appendChild(b);
-  $('msgs').scrollTop=$('msgs').scrollHeight;
-}
-function clearHistory(){
-  if(!confirm('Verlauf dieses Chats wirklich löschen?'))return;
-  localStorage.removeItem(histKey);$('msgs').innerHTML='';seen.clear();toast('Verlauf gelöscht');
-}
+  $('msgs').scrollTop=$('msgs').scrollHeight;}
+function clearHistory(){if(!confirm('Verlauf löschen?'))return;
+  localStorage.removeItem(histKey);$('msgs').innerHTML='';seen.clear();toast('Verlauf gelöscht');}
 
-/* ══ CHAT ══ */
-function createRoom(){const n=$('crName').value.trim();if(!n)return toast('Bitte Raum-Namen eingeben');
+/* ══════ CHAT ══════ */
+function createRoom(){const n=$('crName').value.trim();if(!n)return toast('Raum-Name fehlt');
   adminWatch=false;openRoom(n,$('crPass').value);}
-function joinTyped(){const n=$('jnName').value.trim();if(!n)return toast('Bitte Raum-Namen eingeben');
+function joinTyped(){const n=$('jnName').value.trim();if(!n)return toast('Raum-Name fehlt');
   adminWatch=false;openRoom(n,$('jnPass').value);}
 async function openRoom(name,pass){
+  pass=pass||'';
   chatMode='room';chatPeer='';chatRoomName=name;
-  chatTopic=NS+'/r/'+await sha(name.toLowerCase()+'##'+(pass||''));
-  histKey='nx_h_room_'+name.toLowerCase();
+  chatTopic=NS+'/r/'+await sha(name.toLowerCase()+'##'+pass);
+  chatKey=await deriveRoomKey(NS+'|'+name.toLowerCase()+'|'+(pass||'open'));
+  histKey=roomHist(name);
+  if(!myRooms.some(r=>r.name.toLowerCase()===name.toLowerCase())){
+    myRooms.push({name,pass});SS('nx_myrooms',myRooms);}
+  subs.set(chatTopic,{mode:'room',room:name,key:chatKey});
+  net.subscribe(chatTopic,{qos:1});
+  clearUnread('room:'+name);
   startChat((pass?'🔒 ':'# ')+name);
-  net.subscribe(chatTopic);net.publish(T_ROOMS,JSON.stringify({name,lock:!!pass}));
+  $('cryptoBanner').classList.add('on');
+  net.publish(T_ROOMS,JSON.stringify({name,lock:!!pass}));
   pub({k:'pres',a:'join',admin:isAdmin&&adminWatch});
   $('btnMembers').style.display='flex';
   if(isAdmin&&adminWatch){$('adminBanner').classList.add('on');
-    pub({k:'sys',text:'🛡 Admin '+me+' beobachtet diesen Raum'});addLog('👁 Raum "'+name+'" betreten');}
-}
+    pub({k:'sys',text:'🛡 Admin '+me+' beobachtet diesen Raum'});addLog('👁 Raum "'+name+'" betreten');}}
 async function openDM(other){
+  let pk=LS('nx_pk_'+other,null);
+  const info=users.get(other);
+  if(info&&info.pk){pk=info.pk;SS('nx_pk_'+other,pk);}
+  if(!pk)return toast('⏳ '+other+' muss einmal online sein für den Schlüsselaustausch');
   adminWatch=false;chatMode='dm';chatPeer=other;chatRoomName='';
   chatTopic=NS+'/d/'+await sha([me,other].sort().join('<>'));
-  histKey='nx_h_dm_'+[me,other].sort().join('_');
-  startChat('💬 '+other);net.subscribe(chatTopic);pub({k:'pres',a:'join'});
-  $('btnMembers').style.display='none';
-}
+  try{chatKey=await deriveDMKey(pk);}catch(e){return toast('Schlüsselaustausch fehlgeschlagen');}
+  histKey=dmHist(other);
+  subs.set(chatTopic,{mode:'dm',peer:other,key:chatKey});
+  net.subscribe(chatTopic,{qos:1});
+  clearUnread('dm:'+other);
+  startChat('💬 '+other);$('cryptoBanner').classList.add('on');
+  pub({k:'pres',a:'join'});
+  $('btnMembers').style.display='none';}
 function startChat(title){
   members.clear();members.set(me,{t:Date.now(),admin:isAdmin&&adminWatch});seen.clear();
   $('chTitle').textContent=title;$('msgs').innerHTML='';
-  $('adminBanner').classList.remove('on');
+  $('adminBanner').classList.remove('on');$('cryptoBanner').classList.remove('on');
   cancelReply();cancelAtt();tray.classList.remove('on');
-  loadHistory();updateSub();drawMembers();show('scChat');
-}
+  loadHistory();updateSub();drawMembers();show('scChat');}
 function leaveChat(){
   pub({k:'pres',a:'left'});
-  if(chatTopic)net.unsubscribe(chatTopic);
-  chatTopic='';histKey='';chatRoomName='';const wasAdmin=adminWatch;adminWatch=false;
-  openDrawer(false);drawAll();show(wasAdmin?'scAdmin':'scHome');
-}
-function pub(o){if(!net||!chatTopic)return;o.u=me;
-  o.ts=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  net.publish(chatTopic,JSON.stringify(o));}
+  chatTopic='';histKey='';chatRoomName='';chatKey=null;
+  const w=adminWatch;adminWatch=false;
+  openDrawer(false);drawAll();show(w?'scAdmin':'scHome');}
+async function pub(o){if(!net||!chatTopic)return;
+  o.u=me;o.ts=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  if(chatKey){try{net.publish(chatTopic,JSON.stringify(await encPayload(chatKey,o)),{qos:1});return;}catch(e){}}
+  net.publish(chatTopic,JSON.stringify(o),{qos:1});}
 function typingPing(){clearTimeout(tTimer);tTimer=setTimeout(()=>pub({k:'typ'}),180);}
 function send(){const i=$('msgIn'),v=i.value.trim();if(!v&&!att)return;
   pub({k:'msg',id:'m'+Date.now()+Math.random().toString(36).slice(2,6),
@@ -852,34 +919,28 @@ function onChat(d){
   if(d.k==='sys'){sysAdmin(d.text);$('adminBanner').classList.add('on');return;}
   if(d.k==='pres'){
     if(d.u===me)return;
-    if(d.a==='join'){
-      if(!members.has(d.u))sys(d.u+' ist beigetreten');
+    if(d.a==='join'){if(!members.has(d.u))sys(d.u+' ist beigetreten');
       members.set(d.u,{t:Date.now(),admin:!!d.admin});
       if(d.admin)$('adminBanner').classList.add('on');
-      pub({k:'pres',a:'here',admin:isAdmin&&adminWatch});
-    }
-    if(d.a==='here'){members.set(d.u,{t:Date.now(),admin:!!d.admin});if(d.admin)$('adminBanner').classList.add('on');}
+      pub({k:'pres',a:'here',admin:isAdmin&&adminWatch});}
+    if(d.a==='here'){members.set(d.u,{t:Date.now(),admin:!!d.admin});
+      if(d.admin)$('adminBanner').classList.add('on');}
     if(d.a==='left'){members.delete(d.u);sys(d.u+' hat den Chat verlassen');}
-    drawMembers();updateSub();return;
-  }
+    drawMembers();updateSub();return;}
   if(d.k==='typ'){if(d.u!==me)showTyping(d.u);return;}
-  if(d.k==='msg'){if(seen.has(d.id))return;seen.add(d.id);bubble(d);saveMsg(d);}
-}
+  if(d.k==='msg'){if(seen.has(d.id))return;seen.add(d.id);bubble(d);saveMsg(d);
+    if(d.u!==me&&document.hidden)notify(chatMode==='dm'?d.u:(d.u+' · '+chatRoomName),preview(d),null);}}
 function showTyping(u){const s=$('chSub');s.textContent='✍️ '+u+' schreibt…';s.dataset.t='1';
   clearTimeout(showTyping._t);showTyping._t=setTimeout(()=>{s.dataset.t='';updateSub();},2200);}
 function updateSub(){const s=$('chSub');if(s.dataset.t==='1')return;
-  s.textContent=chatMode==='dm'?(users.has(chatPeer)?'● online':'○ offline'):'● '+members.size+' Teilnehmer';}
-function drawMembers(){
-  const el=$('memList');if(!el)return;el.innerHTML='';
-  [...members.keys()].sort().forEach(u=>{
-    const info=members.get(u)||{};
+  s.textContent=chatMode==='dm'?(users.has(chatPeer)?'🔐 online':'🔐 offline'):'🔐 '+members.size+' Teilnehmer';}
+function drawMembers(){const el=$('memList');if(!el)return;el.innerHTML='';
+  [...members.keys()].sort().forEach(u=>{const i=members.get(u)||{};
     const d=document.createElement('div');d.className='item';
-    d.innerHTML=`<div class="avatar ${info.admin?'gold':''}">${esc(u[0].toUpperCase())}</div>
-      <div class="meta"><h4>${esc(u)}${u===me?' (Du)':''} ${info.admin?'🛡':''}</h4><span>online</span></div>
+    d.innerHTML=`<div class="avatar ${i.admin?'gold':''}">${esc(u[0].toUpperCase())}</div>
+      <div class="meta"><h4>${esc(u)}${u===me?' (Du)':''} ${i.admin?'🛡':''}</h4><span>online</span></div>
       ${isAdmin&&u!==me?'<button class="pill red">Kick</button>':'<div class="dot"></div>'}`;
-    const k=d.querySelector('.pill');if(k)k.onclick=()=>kickUser(u);
-    el.appendChild(d);});
-}
+    const k=d.querySelector('.pill');if(k)k.onclick=()=>kickUser(u);el.appendChild(d);});}
 function openDrawer(b){$('drawer').classList.toggle('on',b);}
 function sys(t){const b=$('msgs'),d=document.createElement('div');d.className='sys';d.textContent=t;
   b.appendChild(d);b.scrollTop=b.scrollHeight;}
@@ -897,13 +958,12 @@ function bubble(d,old){
     <div class="bwrap"><div class="bub">${q}${d.text?`<div>${esc(d.text)}</div>`:''}${m}
     <div class="stamp">${d.ts||''}</div></div><button class="rbtn">↩︎</button></div>`;
   r.querySelector('.rbtn').onclick=()=>setReply(d.u,prev);
-  box.appendChild(r);box.scrollTop=box.scrollHeight;
-}
+  box.appendChild(r);box.scrollTop=box.scrollHeight;}
 function setReply(u,t){reply={u,t};$('rpWho').textContent='Antwort an '+u;$('rpTxt').textContent=t;
   $('replyBar').classList.add('on');$('msgIn').focus();}
 function cancelReply(){reply=null;$('replyBar').classList.remove('on');}
 
-/* ══ MEDIEN ══ */
+/* ══════ MEDIEN ══════ */
 function pickFile(inp){const f=inp.files[0];if(!f)return;
   if(f.type.startsWith('image/')){const rd=new FileReader();
     rd.onload=e=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');
@@ -912,7 +972,7 @@ function pickFile(inp){const f=inp.files[0];if(!f)return;
       c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);
       setAtt('image',c.toDataURL('image/jpeg',.65),f.name);};im.src=e.target.result;};
     rd.readAsDataURL(f);}
-  else if(f.type.startsWith('video/')){if(f.size>4e6)return toast('Video darf max. 4 MB groß sein');
+  else if(f.type.startsWith('video/')){if(f.size>4e6)return toast('Video max. 4 MB');
     const rd=new FileReader();rd.onload=e=>setAtt('video',e.target.result,f.name);rd.readAsDataURL(f);}
   inp.value='';}
 function setAtt(type,url,name){att={type,url,name};

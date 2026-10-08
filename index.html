@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Freunde Chat">
+<meta name="theme-color" content="#075e54">
+<title>Freunde Chat</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background:#dddbd1; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+  header { background: linear-gradient(180deg, #128c7e 0%, #075e54 100%); color:#fff; padding:14px 16px; padding-top:40px; font-size:18px; font-weight:600; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.25); z-index:10; position:relative; }
+  #chat { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .msg { max-width:78%; padding:9px 12px; border-radius:14px; font-size:15.5px; line-height:1.35; word-wrap:break-word; box-shadow:0 1px 2px rgba(0,0,0,0.08); animation:fadeIn .2s ease; }
+  .other { align-self:flex-start; background:#fff; color:#111; border-top-left-radius:4px; }
+  .mine { align-self:flex-end; background:#dcf8c6; color:#111; border-top-right-radius:4px; }
+  .media { max-width:78%; border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,0.08); }
+  .media img, .media video { width:100%; max-height:320px; object-fit:cover; display:block; }
+  .media-caption { padding:7px 10px; font-size:13px; color:#555; }
+  @keyframes fadeIn { from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:translateY(0)} }
+  
+  .input-area { background:#f0f0f0; padding:10px 14px 28px; display:flex; gap:8px; align-items:flex-end; border-top:1px solid #ccc; }
+  .input-area input[type="text"] { flex:1; border:none; border-radius:24px; padding:11px 16px; font-size:16px; outline:none; background:#fff; -webkit-appearance:none; }
+  button { border:none; border-radius:50%; width:44px; height:44px; font-size:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+  .btn-green { background:#25d366; color:#fff; }
+  .btn-gray { background:#e0e0e0; color:#555; }
+  input[type="file"] { display:none; }
+</style>
+</head>
+<body>
+
+<header>Freunde Chat 💬</header>
+
+<div id="chat">
+  <div class="msg other">Hey! Bist du online? 👋</div>
+  <div class="msg mine">Ja! Hast du das neue Video gesehen? 🎬</div>
+</div>
+
+<div class="input-area">
+  <!-- Foto / Video -->
+  <button class="btn-gray" onclick="document.getElementById('fileIn').click()" title="Foto/Video">📎</button>
+  <input type="file" id="fileIn" accept="image/*,video/*" capture="environment" onchange="sendFile(this)">
+
+  <!-- Text -->
+  <input type="text" id="textIn" placeholder="Nachricht schreiben..." autocomplete="off" onkeydown="if(event.key==='Enter') sendText()">
+
+  <!-- Sprachnachricht -->
+  <button class="btn-gray" onclick="sendVoice()" title="Sprachnachricht">🎤</button>
+
+  <!-- Senden -->
+  <button class="btn-green" onclick="sendText()" title="Senden">➤</button>
+</div>
+
+<script>
+  const chat = document.getElementById('chat');
+
+  function sendText() {
+    const val = document.getElementById('textIn').value.trim();
+    if(!val) return;
+    const div = document.createElement('div');
+    div.className = 'msg mine';
+    div.textContent = val;
+    chat.appendChild(div);
+    document.getElementById('textIn').value = '';
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function sendFile(input) {
+    const file = input.files[0];
+    if(!file) return;
+    const url = URL.createObjectURL(file);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'msg mine media';
+    if(file.type.startsWith('video/')){
+      wrapper.innerHTML = `<video src="${url}" controls></video><div class="media-caption">${file.name}</div>`;
+    } else {
+      wrapper.innerHTML = `<img src="${url}" alt="Bild"><div class="media-caption">${file.name}</div>`;
+    }
+    chat.appendChild(wrapper);
+chat.scrollTop = chat.scrollHeight;
+    input.value = '';
+  }
+
+  function sendVoice() {
+    alert("Sprachnachricht (Demo): Hier kannst du später einen Server (z.B. Firebase) für echte Stimmen einbinden. Für jetzt wird eine Text-Marke gesendet.");
+    const div = document.createElement('div');
+    div.className = 'msg mine';
+    div.textContent = "🎙 Sprachnachricht";
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+</script>
+
+</body>
+</html>

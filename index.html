@@ -470,4 +470,469 @@ function renderAuth(){
   $('fCode').style.display=res?'block':'none';
   $('auUser').disabled=!!a; if(a)$('auUser').value=a.u;
   $('auBtn').textContent=reg?'Konto erstellen':(res?'Passwort zurücksetzen':'Anmelden');
-  $('auSub').textContent=reg?'Erstelle dein Konto — pro Gerät ist nur 
+  $('auSub').textContent=reg?'Erstelle dein Konto — pro Gerät ist nur ein Konto möglich.'
+    :(res?'Gib deinen Wiederherstellungs-Code ein.':'Willkommen zurück!');
+  $('fPass').querySelector('label').textContent=res?'Neues Passwort':'Passwort';
+  $('auReset').innerHTML=a?(res?'<b onclick="mode=\'login\';renderAuth()">Zurück zur Anmeldung</b>'
+    :'<b onclick="mode=\'reset\';renderAuth()">Passwort vergessen?</b>'):'';
+}
+function makeCode(){const C='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';
+  for(let i=0;i<8;i++){s+=C[Math.floor(Math.random()*C.length)];if(i===3)s+='-';}return s;}
+async function submitAuth(){
+  const u=$('auUser').value.trim().toLowerCase(),p=$('auPass').value,err=$('auErr');
+  err.textContent='';
+  if(!/^[a-z0-9_]{3,16}$/.test(u))return err.textContent='Name: 3–16 Zeichen (a–z, 0–9, _)';
+  if(p.length<4)return err.textContent='Passwort: mindestens 4 Zeichen';
+  const a=ACC();
+  if(mode==='register'){
+    if(a)return err.textContent='Auf diesem Gerät existiert bereits ein Konto.';
+    if($('auPass2').value!==p)return err.textContent='Passwörter stimmen nicht überein';
+    const c=makeCode();
+    setACC({u,h:await sha(u+'::'+p),rc:await sha(u+'::'+c)});
+    modalCode(c,()=>boot(u));return;
+  }
+  if(mode==='reset'){
+    const c=$('auCode').value.trim().toUpperCase();
+    if(await sha(a.u+'::'+c)!==a.rc)return err.textContent='Wiederherstellungs-Code ist falsch.';
+    const nc=makeCode();
+    setACC({u:a.u,h:await sha(a.u+'::'+p),rc:await sha(a.u+'::'+nc)});
+    modalCode(nc,()=>{mode='login';renderAuth();});return;
+  }
+  if(!a)return err.textContent='Kein Konto vorhanden.';
+  if(await sha(a.u+'::'+p)!==a.h)return err.textContent='Falsches Passwort.';
+  boot(a.u);
+}
+function modalCode(code,cb){
+  $('modalCard').innerHTML=`<div class="logo" style="font-size:22px;">Wiederherstellungs-Code</div>
+    <div class="sub">Schreibe diesen Code auf!<br>Nur damit kannst du dein Passwort zurücksetzen.</div>
+    <div class="codebox"><div class="c">${code}</div></div>
+    <button class="btn ghost" onclick="navigator.clipboard&&navigator.clipboard.writeText('${code}');this.textContent='Kopiert ✓'">Code kopieren</button>
+    <button class="btn" id="mOk">Ich habe ihn notiert</button>`;
+  $('modal').classList.add('on');$('mOk').onclick=()=>{closeModal();cb&&cb();};
+}
+function closeModal(){$('modal').classList.remove('on');}
+function showSecurity(){
+  $('modalCard').innerHTML=`<div class="logo" style="font-size:22px;">Sicherheit</div>
+    <div class="sub">Konto: <b style="color:#fff">${esc(me)}</b></div>
+    <button class="btn" id="mNew">Neuen Wiederherstellungs-Code</button>
+    <button class="btn gold" id="mAdm">${isAdmin?'Admin-Rechte ablegen':'Admin-Login'}</button>
+    <button class="btn danger" id="mDel">Konto & Daten löschen</button>
+    <button class="btn ghost" onclick="closeModal()">Schließen</button>`;
+  $('modal').classList.add('on');
+  $('mNew').onclick=async()=>{const a=ACC(),c=makeCode();setACC({...a,rc:await sha(a.u+'::'+c)});modalCode(c);};
+  $('mAdm').onclick=()=>{
+    if(isAdmin){isAdmin=false;localStorage.removeItem('nx_isadmin');applyAdminUI();closeModal();toast('Admin-Rechte abgelegt');return;}
+    const k=prompt('Admin-Schlüssel eingeben:');
+    if(k===ADMIN_KEY){isAdmin=true;SS('nx_isadmin',true);applyAdminUI();closeModal();toast('🛡 Admin-Modus aktiv');}
+    else if(k!==null)toast('Falscher Schlüssel');
+  };
+  $('mDel').onclick=()=>{if(confirm('Wirklich alles löschen?')){localStorage.clear();location.reload();}};
+}
+function applyAdminUI(){
+  $('btnAdmin').style.display=isAdmin?'flex':'none';
+  $('adminTag').style.display=isAdmin?'inline-block':'none';
+  $('adMe').textContent=isAdmin?('Angemeldet als '+me):'Moderation';
+}
+function logout(){location.reload();}
+window.addEventListener('load',renderAuth);
+
+/* ══ BOOT ══ */
+function boot(user){
+  me=user;
+  friends=LS('nx_friends',[]);reqIn=LS('nx_reqin',[]);reqOut=LS('nx_reqout',[]);
+  bans=LS('nx_bans',[]);modlog=LS('nx_modlog',[]);isAdmin=LS('nx_isadmin',false);
+  if(bans.includes(me)){$('blocked').classList.add('on');return;}
+  $('meLabel').textContent='● '+me+' · online';
+  applyAdminUI();show('scHome');drawAll();
+  net=mqtt.connect(BROKER,{clean:true,reconnectPeriod:2000});
+  net.on('connect',()=>{net.subscribe([T_PRES,T_ROOMS,T_FRIEND,T_ADMIN]);ping();resend();
+    setInterval(ping,9000);setInterval(resend,12000);});
+  net.on('message',(t,pl)=>{
+    let d;try{d=JSON.parse(pl.toString())}catch(e){return}
+    if(t===T_PRES){if(d.u&&d.u!==me&&!bans.includes(d.u)){users.set(d.u,{t:Date.now(),admin:!!d.admin});drawAll();}}
+    else if(t===T_ROOMS){if(d.name)rooms.set(d.name.toLowerCase(),{name:d.name,lock:!!d.lock,t:Date.now()}),drawRooms(),drawAdminRooms();}
+    else if(t===T_FRIEND)onFriendMsg(d);
+    else if(t===T_ADMIN)onAdminMsg(d);
+    else if(t===chatTopic)onChat(d);
+  });
+  setInterval(()=>{const n=Date.now();
+    users.forEach((v,k)=>{if(n-v.t>30000)users.delete(k)});
+    rooms.forEach((v,k)=>{if(n-v.t>70000)rooms.delete(k)});
+    members.forEach((v,k)=>{if(k!==me&&n-v.t>45000)members.delete(k)});
+    drawAll();drawMembers();if($('scAdmin').classList.contains('active'))refreshAdmin();},8000);
+}
+function ping(){if(net&&net.connected)net.publish(T_PRES,JSON.stringify({u:me,admin:isAdmin}));}
+
+/* ══ ADMIN-NACHRICHTEN (empfangen alle) ══ */
+function onAdminMsg(d){
+  if(d.k==='ann'){
+    addLog('📢 Ankündigung von '+d.by+': '+d.text);
+    $('modalCard').innerHTML=`<div class="logo" style="font-size:21px;">📢 Ankündigung</div>
+      <div class="sub" style="color:#fcd34d;font-size:15px;white-space:pre-wrap;">${esc(d.text)}</div>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:10px;">von ${esc(d.by)}</div>
+      <button class="btn ghost" onclick="closeModal()">OK</button>`;
+    $('modal').classList.add('on');
+  }
+  if(d.k==='ban'){
+    if(!bans.includes(d.user)){bans.push(d.user);SS('nx_bans',bans);}
+    addLog('🚫 '+d.by+' hat '+d.user+' gesperrt');
+    if(d.user===me){$('blocked').classList.add('on');}
+    users.delete(d.user);members.delete(d.user);drawAll();
+  }
+  if(d.k==='unban'){
+    bans=bans.filter(b=>b!==d.user);SS('nx_bans',bans);
+    addLog('✅ '+d.by+' hat '+d.user+' entsperrt');drawAll();
+  }
+  if(d.k==='kick'){
+    addLog('👢 '+d.by+' hat '+d.user+' aus "'+d.room+'" entfernt');
+    if(d.user===me&&chatRoomName&&chatRoomName.toLowerCase()===String(d.room).toLowerCase()){
+      leaveChat();toast('👢 Du wurdest aus dem Raum entfernt');
+    }
+  }
+}
+function addLog(t){
+  modlog.unshift({t,ts:new Date().toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})});
+  while(modlog.length>60)modlog.pop();
+  SS('nx_modlog',modlog);drawLog();
+}
+
+/* ══ ADMIN-AKTIONEN ══ */
+function adminPub(o){o.by=me;net.publish(T_ADMIN,JSON.stringify(o));}
+function sendAnnounce(){
+  const t=$('annText').value.trim();if(!t)return toast('Bitte Text eingeben');
+  adminPub({k:'ann',text:t});$('annText').value='';toast('📢 Gesendet');
+}
+function banUser(u){
+  if(u===me)return toast('Du kannst dich nicht selbst sperren');
+  if(!confirm('"'+u+'" wirklich global sperren?'))return;
+  adminPub({k:'ban',user:u});
+}
+function unbanUser(u){adminPub({k:'unban',user:u});}
+function banManual(){const u=$('banName').value.trim().toLowerCase();if(!u)return;$('banName').value='';banUser(u);}
+function kickUser(u){
+  if(!chatRoomName)return toast('Nur innerhalb eines Raums möglich');
+  adminPub({k:'kick',user:u,room:chatRoomName});toast('👢 '+u+' entfernt');
+}
+function adminOpenLocked(){
+  const n=$('adRoomName').value.trim();if(!n)return toast('Raum-Name fehlt');
+  adminWatch=true;openRoom(n,$('adRoomPass').value);
+}
+function refreshAdmin(){
+  $('stUsers').textContent=users.size+1;
+  $('stRooms').textContent=rooms.size;
+  $('stBans').textContent=bans.length;
+  $('stActs').textContent=modlog.length;
+  drawAdminRooms();drawAdminUsers();drawLog();
+}
+function drawAdminRooms(){
+  const el=$('adRoomList');if(!el)return;
+  const pub=[...rooms.values()];
+  if(!pub.length){el.innerHTML='<div class="empty">Keine Räume aktiv.</div>';return;}
+  el.innerHTML='';
+  pub.sort((a,b)=>a.name.localeCompare(b.name)).forEach(r=>{
+    const d=document.createElement('div');d.className='item';
+    d.innerHTML=`<div class="avatar ${r.lock?'off':''}">${r.lock?'🔒':'#'}</div>
+      <div class="meta"><h4>${esc(r.name)}</h4><span>${r.lock?'Passwort nötig':'Öffentlich'}</span></div>
+      <button class="pill gold">🛡 Beobachten</button>`;
+    d.querySelector('.pill').onclick=()=>{
+      let p='';
+      if(r.lock){p=prompt('Passwort für "'+r.name+'":');if(p===null)return;}
+      adminWatch=true;openRoom(r.name,p);
+    };
+    el.appendChild(d);});
+}
+function drawAdminUsers(){
+  const el=$('adUserList'),bl=$('adBanList');if(!el)return;
+  const list=[...users.keys()].sort();
+  if(!list.length)el.innerHTML='<div class="empty">Niemand online.</div>';
+  else{el.innerHTML='';list.forEach(u=>{
+    const info=users.get(u);
+    const d=document.createElement('div');d.className='item';
+    d.innerHTML=`<div class="avatar ${info.admin?'gold':''}">${esc(u[0].toUpperCase())}</div>
+      <div class="meta"><h4>${esc(u)} ${info.admin?'🛡':''}</h4><span>online</span></div>
+      <button class="pill red">Sperren</button>`;
+    d.querySelector('.pill').onclick=()=>banUser(u);
+    el.appendChild(d);});}
+  if(!bans.length)bl.innerHTML='<div class="empty">Keine Sperren.</div>';
+  else{bl.innerHTML='';bans.forEach(u=>{
+    const d=document.createElement('div');d.className='item';
+    d.innerHTML=`<div class="avatar ban">🚫</div>
+      <div class="meta"><h4>${esc(u)}</h4><span>gesperrt</span></div>
+      <button class="pill green">Entsperren</button>`;
+    d.querySelector('.pill').onclick=()=>unbanUser(u);
+    bl.appendChild(d);});}
+}
+function drawLog(){
+  const el=$('logList');if(!el)return;
+  if(!modlog.length){el.innerHTML='<div class="empty">Noch keine Aktionen.</div>';return;}
+  el.innerHTML='';
+  modlog.forEach(l=>{const d=document.createElement('div');d.className='logline';
+    d.innerHTML=`<b style="color:#fcd34d">${l.ts}</b> — ${esc(l.t)}`;el.appendChild(d);});
+}
+function setATab(i){
+  document.querySelectorAll('#scAdmin .tab').forEach((t,n)=>t.classList.toggle('on',n===i));
+  document.querySelectorAll('#scAdmin .pane').forEach((p,n)=>p.classList.toggle('on',n===i));
+  $('apill').style.transform=`translate3d(${i*100}%,0,0)`;
+}
+
+/* ══ FREUNDE ══ */
+function sendRequest(){
+  const n=$('addName').value.trim().toLowerCase();if(!n)return;
+  if(n===me)return toast('Das bist du selbst 🙂');
+  if(bans.includes(n))return toast('Dieser Nutzer ist gesperrt');
+  if(friends.includes(n))return toast(n+' ist bereits dein Freund');
+  if(reqOut.includes(n))return toast('Anfrage läuft bereits');
+  if(reqIn.includes(n))return acceptReq(n);
+  reqOut.push(n);SS('nx_reqout',reqOut);$('addName').value='';
+  net.publish(T_FRIEND,JSON.stringify({k:'req',from:me,to:n}));
+  drawAll();toast('Anfrage an '+n+' gesendet');
+}
+function resend(){if(net&&net.connected)reqOut.forEach(n=>net.publish(T_FRIEND,JSON.stringify({k:'req',from:me,to:n})));}
+function onFriendMsg(d){
+  if(d.to!==me||bans.includes(d.from))return;
+  if(d.k==='req'){
+    if(friends.includes(d.from))return net.publish(T_FRIEND,JSON.stringify({k:'acc',from:me,to:d.from}));
+    if(!reqIn.includes(d.from)){reqIn.push(d.from);SS('nx_reqin',reqIn);drawAll();toast('📨 Neue Anfrage von '+d.from);}
+  }
+  if(d.k==='acc'){
+    reqOut=reqOut.filter(x=>x!==d.from);SS('nx_reqout',reqOut);
+    if(!friends.includes(d.from)){friends.push(d.from);SS('nx_friends',friends);toast('✅ '+d.from+' ist jetzt dein Freund');}
+    drawAll();
+  }
+  if(d.k==='dec'){reqOut=reqOut.filter(x=>x!==d.from);SS('nx_reqout',reqOut);drawAll();toast('❌ '+d.from+' hat abgelehnt');}
+}
+function acceptReq(n){
+  reqIn=reqIn.filter(x=>x!==n);SS('nx_reqin',reqIn);
+  reqOut=reqOut.filter(x=>x!==n);SS('nx_reqout',reqOut);
+  if(!friends.includes(n)){friends.push(n);SS('nx_friends',friends);}
+  net.publish(T_FRIEND,JSON.stringify({k:'acc',from:me,to:n}));
+  drawAll();toast('✅ '+n+' hinzugefügt');
+}
+function declineReq(n){reqIn=reqIn.filter(x=>x!==n);SS('nx_reqin',reqIn);
+  net.publish(T_FRIEND,JSON.stringify({k:'dec',from:me,to:n}));drawAll();}
+function cancelOut(n){reqOut=reqOut.filter(x=>x!==n);SS('nx_reqout',reqOut);drawAll();}
+function removeFriend(n){if(!confirm(n+' entfernen?'))return;
+  friends=friends.filter(f=>f!==n);SS('nx_friends',friends);drawAll();}
+
+/* ══ UI ══ */
+function drawAll(){drawFriends();drawReqs();drawRooms();updateBadges();}
+function updateBadges(){const n=reqIn.length;
+  [$('reqBadge'),$('tabBadge')].forEach(b=>{b.textContent=n;b.classList.toggle('on',n>0);});}
+function lastMsg(peer){
+  const h=LS('nx_h_dm_'+[me,peer].sort().join('_'),[]);if(!h.length)return null;
+  const m=h[h.length-1];
+  const t=m.type==='image'?'📷 Foto':m.type==='video'?'🎬 Video':m.type==='audio'?'🎙 Sprachnachricht':m.text;
+  return (m.u===me?'Du: ':'')+t;
+}
+function drawFriends(){
+  const el=$('friendList');if(!el)return;
+  if(!friends.length){el.innerHTML='<div class="empty">Noch keine Freunde.<br>Gib oben einen Benutzernamen ein<br>und sende eine Anfrage.</div>';return;}
+  el.innerHTML='';
+  friends.slice().sort().forEach(u=>{
+    const on=users.has(u),p=lastMsg(u);
+    const d=document.createElement('div');d.className='item';
+    d.innerHTML=`<div class="avatar ${on?'':'off'}">${esc(u[0].toUpperCase())}</div>
+      <div class="meta"><h4>${esc(u)}</h4><span>${p?esc(p.slice(0,38)):(on?'online':'offline')}</span></div>
+      <div class="dot ${on?'':'off'}"></div><button class="pill gray" style="margin-left:4px;">✕</button>`;
+    d.querySelector('.meta').onclick=()=>openDM(u);
+    d.querySelector('.avatar').onclick=()=>openDM(u);
+    d.querySelector('.pill').onclick=e=>{e.stopPropagation();removeFriend(u);};
+    el.appendChild(d);});
+}
+function drawReqs(){
+  const i=$('reqInList'),o=$('reqOutList');if(!i)return;
+  if(!reqIn.length)i.innerHTML='<div class="empty">Keine neuen Anfragen.</div>';
+  else{i.innerHTML='';reqIn.forEach(u=>{const d=document.createElement('div');d.className='item';
+    d.innerHTML=`<div class="avatar">${esc(u[0].toUpperCase())}</div>
+      <div class="meta"><h4>${esc(u)}</h4><span>möchte dein Freund sein</span></div>
+      <button class="pill green">✓</button><button class="pill red">✕</button>`;
+    const b=d.querySelectorAll('.pill');b[0].onclick=()=>acceptReq(u);b[1].onclick=()=>declineReq(u);
+    i.appendChild(d);});}
+  if(!reqOut.length)o.innerHTML='<div class="empty">Keine gesendeten Anfragen.</div>';
+  else{o.innerHTML='';reqOut.forEach(u=>{const d=document.createElement('div');d.className='item';
+    d.innerHTML=`<div class="avatar off">${esc(u[0].toUpperCase())}</div>
+      <div class="meta"><h4>${esc(u)}</h4><span>wartet auf Bestätigung…</span></div>
+      <button class="pill gray">Abbrechen</button>`;
+    d.querySelector('.pill').onclick=()=>cancelOut(u);o.appendChild(d);});}
+}
+function drawRooms(){
+  const el=$('roomList');if(!el)return;
+  if(!rooms.size){el.innerHTML='<div class="empty">Keine aktiven Räume.<br>Erstelle den ersten!</div>';return;}
+  el.innerHTML='';
+  [...rooms.values()].sort((a,b)=>a.name.localeCompare(b.name)).forEach(r=>{
+    const d=document.createElement('div');d.className='item';
+    d.innerHTML=`<div class="avatar">${r.lock?'🔒':'#'}</div>
+      <div class="meta"><h4>${esc(r.name)}</h4><span>${r.lock?'Passwortgeschützt':'Öffentlich'}</span></div>
+      <button class="pill">Beitreten</button>`;
+    d.querySelector('.pill').onclick=()=>{let p='';
+      if(r.lock){p=prompt('Passwort für "'+r.name+'":');if(p===null)return;}openRoom(r.name,p);};
+    el.appendChild(d);});
+}
+function setTab(i){
+  document.querySelectorAll('#scHome .tab').forEach((t,n)=>t.classList.toggle('on',n===i));
+  document.querySelectorAll('#scHome .pane').forEach((p,n)=>p.classList.toggle('on',n===i));
+  $('pill').style.transform=`translate3d(${i*100}%,0,0)`;
+}
+function setSub(i){
+  document.querySelectorAll('.subtab').forEach((t,n)=>t.classList.toggle('on',n===i));
+  document.querySelectorAll('.subpane').forEach((p,n)=>p.classList.toggle('on',n===i));
+  $('subpill').style.transform=`translate3d(${i*100}%,0,0)`;
+}
+function toast(t){
+  const d=document.createElement('div');
+  d.style.cssText='position:fixed;left:50%;top:calc(env(safe-area-inset-top,20px) + 58px);transform:translateX(-50%);z-index:120;background:rgba(34,211,238,.18);border:1px solid rgba(34,211,238,.4);color:#a5f3fc;padding:10px 18px;border-radius:14px;font-size:13px;backdrop-filter:blur(10px);max-width:86vw;text-align:center;';
+  d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200);
+}
+
+/* ══ VERLAUF ══ */
+function saveMsg(d){
+  if(!histKey)return;let h=LS(histKey,[]);h.push(d);
+  while(h.length>160)h.shift();
+  try{SS(histKey,h)}catch(e){while(h.length>40)h.shift();SS(histKey,h);}
+}
+function loadHistory(){
+  const h=LS(histKey,[]);if(!h.length)return;
+  const a=document.createElement('div');a.className='divider';a.textContent='Bisheriger Verlauf';$('msgs').appendChild(a);
+  h.forEach(m=>{seen.add(m.id);bubble(m,true);});
+  const b=document.createElement('div');b.className='divider';b.textContent='Jetzt';$('msgs').appendChild(b);
+  $('msgs').scrollTop=$('msgs').scrollHeight;
+}
+function clearHistory(){
+  if(!confirm('Verlauf dieses Chats wirklich löschen?'))return;
+  localStorage.removeItem(histKey);$('msgs').innerHTML='';seen.clear();toast('Verlauf gelöscht');
+}
+
+/* ══ CHAT ══ */
+function createRoom(){const n=$('crName').value.trim();if(!n)return toast('Bitte Raum-Namen eingeben');
+  adminWatch=false;openRoom(n,$('crPass').value);}
+function joinTyped(){const n=$('jnName').value.trim();if(!n)return toast('Bitte Raum-Namen eingeben');
+  adminWatch=false;openRoom(n,$('jnPass').value);}
+async function openRoom(name,pass){
+  chatMode='room';chatPeer='';chatRoomName=name;
+  chatTopic=NS+'/r/'+await sha(name.toLowerCase()+'##'+(pass||''));
+  histKey='nx_h_room_'+name.toLowerCase();
+  startChat((pass?'🔒 ':'# ')+name);
+  net.subscribe(chatTopic);net.publish(T_ROOMS,JSON.stringify({name,lock:!!pass}));
+  pub({k:'pres',a:'join',admin:isAdmin&&adminWatch});
+  $('btnMembers').style.display='flex';
+  if(isAdmin&&adminWatch){$('adminBanner').classList.add('on');
+    pub({k:'sys',text:'🛡 Admin '+me+' beobachtet diesen Raum'});addLog('👁 Raum "'+name+'" betreten');}
+}
+async function openDM(other){
+  adminWatch=false;chatMode='dm';chatPeer=other;chatRoomName='';
+  chatTopic=NS+'/d/'+await sha([me,other].sort().join('<>'));
+  histKey='nx_h_dm_'+[me,other].sort().join('_');
+  startChat('💬 '+other);net.subscribe(chatTopic);pub({k:'pres',a:'join'});
+  $('btnMembers').style.display='none';
+}
+function startChat(title){
+  members.clear();members.set(me,{t:Date.now(),admin:isAdmin&&adminWatch});seen.clear();
+  $('chTitle').textContent=title;$('msgs').innerHTML='';
+  $('adminBanner').classList.remove('on');
+  cancelReply();cancelAtt();tray.classList.remove('on');
+  loadHistory();updateSub();drawMembers();show('scChat');
+}
+function leaveChat(){
+  pub({k:'pres',a:'left'});
+  if(chatTopic)net.unsubscribe(chatTopic);
+  chatTopic='';histKey='';chatRoomName='';const wasAdmin=adminWatch;adminWatch=false;
+  openDrawer(false);drawAll();show(wasAdmin?'scAdmin':'scHome');
+}
+function pub(o){if(!net||!chatTopic)return;o.u=me;
+  o.ts=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  net.publish(chatTopic,JSON.stringify(o));}
+function typingPing(){clearTimeout(tTimer);tTimer=setTimeout(()=>pub({k:'typ'}),180);}
+function send(){const i=$('msgIn'),v=i.value.trim();if(!v&&!att)return;
+  pub({k:'msg',id:'m'+Date.now()+Math.random().toString(36).slice(2,6),
+    type:att?att.type:'text',text:v,media:att?att.url:null,
+    adm:isAdmin&&adminWatch,re:reply?{u:reply.u,t:reply.t}:null});
+  i.value='';cancelReply();cancelAtt();tray.classList.remove('on');}
+function onChat(d){
+  if(bans.includes(d.u))return;
+  if(d.k==='sys'){sysAdmin(d.text);$('adminBanner').classList.add('on');return;}
+  if(d.k==='pres'){
+    if(d.u===me)return;
+    if(d.a==='join'){
+      if(!members.has(d.u))sys(d.u+' ist beigetreten');
+      members.set(d.u,{t:Date.now(),admin:!!d.admin});
+      if(d.admin)$('adminBanner').classList.add('on');
+      pub({k:'pres',a:'here',admin:isAdmin&&adminWatch});
+    }
+    if(d.a==='here'){members.set(d.u,{t:Date.now(),admin:!!d.admin});if(d.admin)$('adminBanner').classList.add('on');}
+    if(d.a==='left'){members.delete(d.u);sys(d.u+' hat den Chat verlassen');}
+    drawMembers();updateSub();return;
+  }
+  if(d.k==='typ'){if(d.u!==me)showTyping(d.u);return;}
+  if(d.k==='msg'){if(seen.has(d.id))return;seen.add(d.id);bubble(d);saveMsg(d);}
+}
+function showTyping(u){const s=$('chSub');s.textContent='✍️ '+u+' schreibt…';s.dataset.t='1';
+  clearTimeout(showTyping._t);showTyping._t=setTimeout(()=>{s.dataset.t='';updateSub();},2200);}
+function updateSub(){const s=$('chSub');if(s.dataset.t==='1')return;
+  s.textContent=chatMode==='dm'?(users.has(chatPeer)?'● online':'○ offline'):'● '+members.size+' Teilnehmer';}
+function drawMembers(){
+  const el=$('memList');if(!el)return;el.innerHTML='';
+  [...members.keys()].sort().forEach(u=>{
+    const info=members.get(u)||{};
+    const d=document.createElement('div');d.className='item';
+    d.innerHTML=`<div class="avatar ${info.admin?'gold':''}">${esc(u[0].toUpperCase())}</div>
+      <div class="meta"><h4>${esc(u)}${u===me?' (Du)':''} ${info.admin?'🛡':''}</h4><span>online</span></div>
+      ${isAdmin&&u!==me?'<button class="pill red">Kick</button>':'<div class="dot"></div>'}`;
+    const k=d.querySelector('.pill');if(k)k.onclick=()=>kickUser(u);
+    el.appendChild(d);});
+}
+function openDrawer(b){$('drawer').classList.toggle('on',b);}
+function sys(t){const b=$('msgs'),d=document.createElement('div');d.className='sys';d.textContent=t;
+  b.appendChild(d);b.scrollTop=b.scrollHeight;}
+function sysAdmin(t){const b=$('msgs'),d=document.createElement('div');d.className='sys admin';d.textContent=t;
+  b.appendChild(d);b.scrollTop=b.scrollHeight;}
+function bubble(d,old){
+  const box=$('msgs'),mine=d.u===me,r=document.createElement('div');
+  r.className='row '+(mine?'me':'you')+(old?' nofx':'');
+  let q=d.re?`<div class="quote"><b>${esc(d.re.u)}</b>${esc(d.re.t)}</div>`:'';
+  let m='',prev=d.text||'Anhang';
+  if(d.type==='image')m=`<img src="${d.media}">`;
+  else if(d.type==='video')m=`<video src="${d.media}" controls playsinline></video>`;
+  else if(d.type==='audio'){prev='🎙 Sprachnachricht';m=`🎙 Sprachnachricht<audio src="${d.media}" controls playsinline></audio>`;}
+  r.innerHTML=`${!mine&&chatMode==='room'?`<div class="who">${d.adm?'🛡 ':''}${esc(d.u)} · ${d.ts}</div>`:''}
+    <div class="bwrap"><div class="bub">${q}${d.text?`<div>${esc(d.text)}</div>`:''}${m}
+    <div class="stamp">${d.ts||''}</div></div><button class="rbtn">↩︎</button></div>`;
+  r.querySelector('.rbtn').onclick=()=>setReply(d.u,prev);
+  box.appendChild(r);box.scrollTop=box.scrollHeight;
+}
+function setReply(u,t){reply={u,t};$('rpWho').textContent='Antwort an '+u;$('rpTxt').textContent=t;
+  $('replyBar').classList.add('on');$('msgIn').focus();}
+function cancelReply(){reply=null;$('replyBar').classList.remove('on');}
+
+/* ══ MEDIEN ══ */
+function pickFile(inp){const f=inp.files[0];if(!f)return;
+  if(f.type.startsWith('image/')){const rd=new FileReader();
+    rd.onload=e=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');
+      let w=im.width,h=im.height,M=900;
+      if(w>M||h>M){if(w>h){h=Math.round(h*M/w);w=M}else{w=Math.round(w*M/h);h=M}}
+      c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);
+      setAtt('image',c.toDataURL('image/jpeg',.65),f.name);};im.src=e.target.result;};
+    rd.readAsDataURL(f);}
+  else if(f.type.startsWith('video/')){if(f.size>4e6)return toast('Video darf max. 4 MB groß sein');
+    const rd=new FileReader();rd.onload=e=>setAtt('video',e.target.result,f.name);rd.readAsDataURL(f);}
+  inp.value='';}
+function setAtt(type,url,name){att={type,url,name};
+  $('attThumb').innerHTML=type==='image'?`<img src="${url}" class="thumb">`:`<div class="thumb">🎬</div>`;
+  $('attName').textContent=name;$('attBar').classList.add('on');}
+function cancelAtt(){att=null;$('attBar').classList.remove('on');}
+async function toggleMic(){const b=$('micBtn');
+  if(!recording){try{
+    const st=await navigator.mediaDevices.getUserMedia({audio:true});
+    const o=MediaRecorder.isTypeSupported('audio/mp4')?{mimeType:'audio/mp4'}:{};
+    rec=new MediaRecorder(st,o);chunks=[];
+    rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+    rec.onstop=()=>{const bl=new Blob(chunks,{type:rec.mimeType||'audio/mp4'}),rd=new FileReader();
+      rd.onload=()=>{pub({k:'msg',id:'m'+Date.now()+Math.random().toString(36).slice(2,6),
+        type:'audio',media:rd.result,adm:isAdmin&&adminWatch,
+        re:reply?{u:reply.u,t:reply.t}:null});cancelReply();};
+      rd.readAsDataURL(bl);st.getTracks().forEach(t=>t.stop());};
+    rec.start();recording=true;b.classList.add('rec');b.textContent='⏹';
+  }catch(e){toast('Mikrofon-Zugriff verweigert');}}
+  else{rec.stop();recording=false;b.classList.remove('rec');b.textContent='🎙';}}
+</script>
+</body>
+</html>

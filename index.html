@@ -251,7 +251,6 @@ border-left:1px solid var(--line);backdrop-filter:blur(28px);padding:calc(var(--
 display:flex;flex-direction:column;gap:13px;overflow-y:auto;transform:translate3d(100%,0,0);
 transition:transform .34s var(--ease);}
 #drawer.on .panel{transform:none;}
-/* NOTIFICATION CENTER */
 #noti{position:fixed;inset:0;z-index:120;display:none;}
 #noti.on{display:block;}
 #noti .bgx{position:absolute;inset:0;}
@@ -418,8 +417,6 @@ background:#0a0408;padding:28px;text-align:center;flex-direction:column;gap:14px
       <button class="btn" onclick="joinTyped()">Beitreten</button>
       <div class="secttl" style="margin-top:22px;">Aktive Räume</div>
       <div class="list" id="roomList"><div class="empty">Suche nach Räumen…</div></div></div>
-
-    <!-- SPIELE + STATISTIK -->
     <div class="pane" id="pane3">
       <div class="secttl">Gegen Freunde</div>
       <div class="list">
@@ -431,21 +428,16 @@ background:#0a0408;padding:28px;text-align:center;flex-direction:column;gap:14px
           <div class="meta"><h4>Schere Stein Papier</h4><span class="pv">Mit Punktestand</span></div><button class="pill">Spielen</button></div>
         <div class="item" onclick="startSolo()"><div class="avatar">🤖</div>
           <div class="meta"><h4>Solo gegen KI</h4><span class="pv">Tic Tac Toe üben</span></div><button class="pill">Start</button></div></div>
-
-      <div class="secttl" style="margin-top:24px;">📊 Deine Bilanz
-        <b id="wrateTxt">–</b></div>
+      <div class="secttl" style="margin-top:24px;">📊 Deine Bilanz<b id="wrateTxt">–</b></div>
       <div class="stats g4">
         <div class="stat"><div class="n" id="stTotal">0</div><div class="l">Spiele</div></div>
         <div class="stat"><div class="n w" id="stWin">0</div><div class="l">Siege</div></div>
         <div class="stat"><div class="n l" id="stLoss">0</div><div class="l">Nieder.</div></div>
         <div class="stat"><div class="n d" id="stDraw">0</div><div class="l">Remis</div></div></div>
       <div class="wbar" id="wbar"><i class="w" style="width:0"></i><i class="d" style="width:0"></i><i class="l" style="width:0"></i></div>
-
       <div class="secttl">Gegen wen</div>
       <div class="list" id="statPerFriend"><div class="empty">Noch keine Partien gespielt.</div></div>
-
-      <div class="secttl" style="margin-top:20px;">Letzte Partien
-        <b onclick="clearMatches()" style="cursor:pointer;color:#fca5a5">Löschen</b></div>
+      <div class="secttl" style="margin-top:20px;">Letzte Partien<b onclick="clearMatches()" style="cursor:pointer;color:#fca5a5">Löschen</b></div>
       <div class="list" id="matchList"><div class="empty">Noch keine Partien.</div></div>
     </div>
   </div>
@@ -520,15 +512,10 @@ background:#0a0408;padding:28px;text-align:center;flex-direction:column;gap:14px
   <div id="roomOpts"></div>
   <div class="secttl">Teilnehmer</div><div class="list" id="memList"></div></div></div>
 
-<!-- NOTIFICATION CENTER -->
-<div id="noti">
-  <div class="bgx" onclick="closeNoti()"></div>
-  <div class="pop">
-    <div class="nhd"><h3>🔔 Benachrichtigungen</h3>
-      <button onclick="clearNotis()">Alle löschen</button></div>
-    <div id="nList"></div>
-  </div>
-</div>
+<div id="noti"><div class="bgx" onclick="closeNoti()"></div>
+  <div class="pop"><div class="nhd"><h3>🔔 Benachrichtigungen</h3>
+    <button onclick="clearNotis()">Alle löschen</button></div>
+    <div id="nList"></div></div></div>
 
 <div id="modal" onclick="closeModal()"><div class="card" onclick="event.stopPropagation()" id="modalCard"></div></div>
 
@@ -571,7 +558,20 @@ background:#0a0408;padding:28px;text-align:center;flex-direction:column;gap:14px
   <div style="color:var(--muted);font-size:14px;max-width:320px;">Von einem Administrator gesperrt.</div></div>
 
 <script>
-const ADMIN_PUB=null;
+/* ╔═══════════════════════════════════════════════════════════════╗
+   ║  ADMIN-SCHLÜSSEL                                              ║
+   ║  null = kein Admin möglich (sicherer Standard)                ║
+   ║                                                               ║
+   ║  So richtest du dich als Admin ein:                           ║
+   ║  1. App öffnen → ⚙️ → "Admin-Schlüsselpaar erzeugen"          ║
+   ║     (oder 5× auf "Nexus" im Login tippen)                     ║
+   ║  2. Öffentlichen Teil kopieren und hier unten einsetzen:      ║
+   ║     const ADMIN_PUB = {"kty":"EC","crv":"P-256",...};         ║
+   ║  3. Privaten Teil in deine Notizen – NIEMALS teilen!          ║
+   ║  4. ⚙️ → "Admin-Schlüssel laden" → privaten Teil einfügen     ║
+   ╚═══════════════════════════════════════════════════════════════╝ */
+const ADMIN_PUB = null;
+
 const BROKER='wss://broker.emqx.io:8084/mqtt';
 const NS='nexusB2';
 const T_PRES=NS+'/presence',T_ROOMS=NS+'/rooms',T_ADMIN=NS+'/admin';
@@ -610,29 +610,24 @@ function toast(t){const d=document.createElement('div');
   d.style.cssText='position:fixed;left:50%;top:calc(env(safe-area-inset-top,20px) + 58px);transform:translateX(-50%);z-index:190;background:rgba(34,211,238,.2);border:1px solid rgba(34,211,238,.45);color:#a5f3fc;padding:10px 18px;border-radius:14px;font-size:13px;backdrop-filter:blur(10px);max-width:86vw;text-align:center;';
   d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200);}
 
-/* ╔══════ 1. WEB AUDIO SOUND-SYSTEM ══════╗ */
+/* ══ WEB AUDIO SOUND ══ */
 let AC=null,sfxOff=LS('nx_sfx_off',false);
 function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}
   if(AC&&AC.state==='suspended')AC.resume();return AC;}
-function tone(freq,start,dur,type,vol,sweepTo){
-  const c=ac();if(!c)return;
-  const t0=c.currentTime+start;
-  const o=c.createOscillator(),g=c.createGain();
+function tone(freq,start,dur,type,vol,sweepTo){const c=ac();if(!c)return;
+  const t0=c.currentTime+start,o=c.createOscillator(),g=c.createGain();
   o.type=type||'sine';o.frequency.setValueAtTime(freq,t0);
   if(sweepTo)o.frequency.exponentialRampToValueAtTime(sweepTo,t0+dur);
   g.gain.setValueAtTime(.0001,t0);
   g.gain.exponentialRampToValueAtTime(vol||.15,t0+Math.min(.02,dur*.25));
   g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
   o.connect(g);g.connect(c.destination);o.start(t0);o.stop(t0+dur+.03);}
-function noise(start,dur,vol){
-  const c=ac();if(!c)return;
+function noise(start,dur,vol){const c=ac();if(!c)return;
   const len=Math.floor(c.sampleRate*dur),buf=c.createBuffer(1,len,c.sampleRate),d=buf.getChannelData(0);
   for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*(1-i/len);
   const s=c.createBufferSource(),g=c.createGain();
-  s.buffer=buf;g.gain.value=vol||.08;s.connect(g);g.connect(c.destination);
-  s.start(c.currentTime+start);}
-function sfx(name){
-  if(sfxOff)return;
+  s.buffer=buf;g.gain.value=vol||.08;s.connect(g);g.connect(c.destination);s.start(c.currentTime+start);}
+function sfx(name){if(sfxOff)return;
   switch(name){
     case 'click':   tone(520,0,.05,'square',.055); break;
     case 'move':    tone(380,0,.07,'triangle',.11,560); break;
@@ -646,23 +641,20 @@ function sfx(name){
                     tone(1319,.2,.26,'square',.14); noise(.2,.1,.05); break;
     case 'request': tone(1047,0,.09,'sine',.12); tone(784,.1,.16,'sine',.11); break;
     case 'error':   tone(220,0,.22,'sawtooth',.11,140); break;
-    case 'pop':     tone(700,0,.05,'sine',.08,1200); break;
-  }}
+    case 'pop':     tone(700,0,.05,'sine',.08,1200); break;}}
 function toggleSfx(){sfxOff=!sfxOff;SS('nx_sfx_off',sfxOff);
-  $('btnSfx').textContent=sfxOff?'🔇':'🔊';
-  $('btnSfx').classList.toggle('hot',sfxOff);
+  $('btnSfx').textContent=sfxOff?'🔇':'🔊';$('btnSfx').classList.toggle('hot',sfxOff);
   if(!sfxOff){sfx('chime');toast('🔊 Sounds an');}else toast('🔇 Sounds aus');}
-function initSfxUI(){$('btnSfx').textContent=sfxOff?'🔇':'🔊';
-  $('btnSfx').classList.toggle('hot',sfxOff);}
+function initSfxUI(){$('btnSfx').textContent=sfxOff?'🔇':'🔊';$('btnSfx').classList.toggle('hot',sfxOff);}
 ['pointerdown','touchstart','keydown'].forEach(e=>
   document.addEventListener(e,()=>{ac();},{once:true,passive:true}));
 
-/* ╔══════ 3+4. NOTIFICATIONS & CENTER ══════╗ */
+/* ══ NOTIFICATIONS ══ */
 function askNotif(){if(!('Notification' in window))return toast('Nicht unterstützt');
   Notification.requestPermission().then(p=>{toast(p==='granted'?'🔔 Push aktiv':'Push blockiert');});}
 function sysPush(title,body,tag){
   if('Notification' in window&&Notification.permission==='granted'){
-    try{new Notification(title,{body,tag:tag||title,badge:'',renotify:true});}catch(e){}}}
+    try{new Notification(title,{body,tag:tag||title,renotify:true});}catch(e){}}}
 function addNoti(icon,title,text,sound,forcePush){
   notis.unshift({i:icon,t:title,x:text,ts:Date.now(),n:1});
   while(notis.length>40)notis.pop();SS('nx_notis',notis);
@@ -673,10 +665,7 @@ function addNoti(icon,title,text,sound,forcePush){
   if(!document.hidden&&!$('noti').classList.contains('on'))toast(icon+' '+title);}
 function unreadNotis(){return notis.filter(n=>n.n).length;}
 function drawBell(){const n=unreadNotis(),b=$('bellBadge');
-  b.textContent=n>99?'99+':n;b.classList.toggle('on',n>0);
-  $('btnBell').textContent='';
-  $('btnBell').append(document.createTextNode(n>0?'🔔':'🔔'));
-  $('btnBell').appendChild(b);}
+  b.textContent=n>99?'99+':n;b.classList.toggle('on',n>0);}
 function openNoti(){sfx('click');$('noti').classList.add('on');renderNotis();
   setTimeout(()=>{notis.forEach(n=>n.n=0);SS('nx_notis',notis);drawBell();},900);}
 function closeNoti(){$('noti').classList.remove('on');
@@ -692,7 +681,7 @@ function renderNotis(){const el=$('nList');if(!el)return;
     d.innerHTML=`<div class="i">${n.i}</div><div class="c"><b>${esc(n.t)}</b>
       <p>${esc(n.x)}</p><i>${agoTxt(n.ts)}</i></div>`;el.appendChild(d);});}
 
-/* ╔══════ 2. MATCH-HISTORY ══════╗ */
+/* ══ MATCH-HISTORY ══ */
 function recordMatch(opp,type,result){
   matches.unshift({o:opp,g:type,r:result,ts:Date.now()});
   while(matches.length>200)matches.pop();SS('nx_matches',matches);drawStats();}
@@ -709,10 +698,8 @@ function drawStats(){
     bar.children[1].style.width=(d/tot*100)+'%';
     bar.children[2].style.width=(l/tot*100)+'%';}
   else{[0,1,2].forEach(i=>bar.children[i].style.width='0');}
-
-  const per={};
-  matches.forEach(m=>{if(!per[m.o])per[m.o]={w:0,l:0,d:0};per[m.o][m.r]++;});
-  const pf=$('statPerFriend');const ks=Object.keys(per);
+  const per={};matches.forEach(m=>{if(!per[m.o])per[m.o]={w:0,l:0,d:0};per[m.o][m.r]++;});
+  const pf=$('statPerFriend'),ks=Object.keys(per);
   if(!ks.length)pf.innerHTML='<div class="empty">Noch keine Partien gespielt.</div>';
   else{pf.innerHTML='';
     ks.sort((a,b)=>(per[b].w+per[b].l+per[b].d)-(per[a].w+per[a].l+per[a].d)).forEach(o=>{
@@ -723,7 +710,6 @@ function drawStats(){
         <span class="pv">${n} Partien · ${Math.round(s.w/n*100)}% gewonnen</span></div>
         <span class="res w">${s.w}</span><span class="res d">${s.d}</span><span class="res l">${s.l}</span>`;
       pf.appendChild(el);});}
-
   const ml=$('matchList');
   if(!matches.length)ml.innerHTML='<div class="empty">Noch keine Partien.</div>';
   else{ml.innerHTML='';matches.slice(0,30).forEach(m=>{
@@ -809,7 +795,7 @@ async function deriveDMKey(j){const t=await crypto.subtle.importKey('jwk',j,{nam
   return crypto.subtle.deriveKey({name:'ECDH',public:t},myECDH.privateKey,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
 async function loadAdminPub(){if(!ADMIN_PUB)return;
   try{adminPubKey=await crypto.subtle.importKey('jwk',ADMIN_PUB,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);}catch(e){}}
-async function loadAdminPriv(){const j=LS('nx_adminpriv',null);if(!j)return false;
+async function loadAdminPriv(){const j=LS('nx_adminpriv',null);if(!j||!ADMIN_PUB)return false;
   try{adminPrivKey=await crypto.subtle.importKey('jwk',j,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);return true;}catch(e){return false;}}
 async function adminSend(o){if(!adminPrivKey)return toast('Kein Admin-Schlüssel');
   o.by=me;o.t=Date.now();o.n=Math.random().toString(36).slice(2);
@@ -821,15 +807,22 @@ async function onAdminRaw(m){if(!adminPubKey||!m.b||!m.s)return;
   if(Math.abs(Date.now()-d.t)>120000||nonces.has(d.n))return;nonces.add(d.n);handleAdmin(d);}
 let logoTaps=0;
 $('brandLogo').onclick=()=>{if(++logoTaps>=5){logoTaps=0;keygenModal();}};
-async function keygenModal(){const kp=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);
+async function keygenModal(){sfx('invite');
+  const kp=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);
   const pub=await crypto.subtle.exportKey('jwk',kp.publicKey),priv=await crypto.subtle.exportKey('jwk',kp.privateKey);
   delete pub.key_ops;delete pub.ext;
-  $('modalCard').innerHTML=`<div class="logo" style="font-size:21px;">🔐 Admin-Schlüssel</div>
-    <div class="field"><label>ADMIN_PUB</label><textarea class="inp mono" id="kgPub" readonly>${JSON.stringify(pub)}</textarea></div>
-    <button class="btn ghost" onclick="cp('kgPub',this)">Kopieren</button>
-    <div class="field" style="margin-top:12px;"><label>Privat – geheim!</label><textarea class="inp mono" id="kgPriv" readonly>${JSON.stringify(priv)}</textarea></div>
-    <button class="btn ghost" onclick="cp('kgPriv',this)">Kopieren</button>
-    <button class="btn" onclick="closeModal()">Fertig</button>`;$('modal').classList.add('on');}
+  $('modalCard').innerHTML=`<div class="logo" style="font-size:21px;">🔐 Admin-Schlüsselpaar</div>
+    <div class="sub">1️⃣ Öffentlich → in den Code<br>2️⃣ Privat → in deine Notizen</div>
+    <div class="field"><label>① Öffentlich (ADMIN_PUB im Code ersetzen)</label>
+      <textarea class="inp mono" id="kgPub" readonly>${JSON.stringify(pub)}</textarea></div>
+    <button class="btn ghost" onclick="cp('kgPub',this)">Öffentlichen Teil kopieren</button>
+    <div class="field" style="margin-top:14px;"><label>② Privat – GEHEIM halten!</label>
+      <textarea class="inp mono" id="kgPriv" readonly>${JSON.stringify(priv)}</textarea></div>
+    <button class="btn ghost" onclick="cp('kgPriv',this)">Privaten Teil kopieren</button>
+    <div class="note">Ohne den privaten Teil kannst du nie wieder Admin werden.
+      Schreib ihn JETZT in deine Notizen-App.</div>
+    <button class="btn" onclick="closeModal()">Fertig</button>`;
+  $('modal').classList.add('on');}
 function cp(id,b){const t=$(id);t.select();if(navigator.clipboard)navigator.clipboard.writeText(t.value);
   b.textContent='Kopiert ✓';sfx('pop');}
 
@@ -878,14 +871,19 @@ function showSecurity(){$('modalCard').innerHTML=`<div class="logo" style="font-
     <div class="d">Töne bei Klicks, Nachrichten, Spielen</div></div>
     <button class="toggle ${sfxOff?'':'on'}" onclick="toggleSfx();this.classList.toggle('on')"></button></div>
   <button class="btn ghost" onclick="askNotif()">🔔 Push-Benachrichtigungen erlauben</button>
-  <button class="btn ghost" id="mNew">Neuer Wiederherstellungs-Code</button>
-  <button class="btn gold" id="mAdm">${isAdmin?'Admin-Modus beenden':'Admin-Schlüssel laden'}</button>
+  <button class="btn ghost" id="mNew">🔑 Neuer Wiederherstellungs-Code</button>
+  <div class="secttl" style="margin-top:16px;">Admin</div>
+  <button class="btn gold" onclick="sfx('click');keygenModal()">🔐 Admin-Schlüsselpaar erzeugen</button>
+  <button class="btn ghost" id="mAdm">${isAdmin?'🛡 Admin-Modus beenden':'🛡 Admin-Schlüssel laden'}</button>
+  <div class="note" style="text-align:left;">${ADMIN_PUB?'✅ Im Code ist ein Admin-Schlüssel hinterlegt.'
+    :'⚠️ Noch kein ADMIN_PUB im Code – Admin ist deaktiviert.'}</div>
+  <div class="secttl" style="margin-top:16px;">Konto</div>
   <button class="btn danger" id="mOut">Abmelden</button>
   <button class="btn danger" id="mDel">Konto & Daten löschen</button>
   <button class="btn ghost" onclick="closeModal()">Schließen</button>`;$('modal').classList.add('on');
   $('mNew').onclick=async()=>{const a=ACC(),c=makeCode();setACC({...a,rc:await sha(a.u+'::'+c)});modalCode(c);};
   $('mAdm').onclick=()=>{if(isAdmin){isAdmin=false;adminPrivKey=null;localStorage.removeItem('nx_adminpriv');
-    applyAdminUI();closeModal();return;}adminLoginModal();};
+    applyAdminUI();closeModal();toast('Admin-Modus beendet');return;}adminLoginModal();};
   $('mOut').onclick=doLogout;
   $('mDel').onclick=()=>{if(confirm('Wirklich alles löschen?')){
     localStorage.clear();if(DB)indexedDB.deleteDatabase('nexus_hist');location.reload();}};}
@@ -893,22 +891,23 @@ function goOffline(){if(net&&net.connected)
   try{net.publish(T_PRES,JSON.stringify({u:me,off:1}),{qos:0});}catch(e){}}
 function doLogout(){if(G&&!G.solo&&!G.over)gsend({k:'gquit'});goOffline();
   localStorage.removeItem('nx_session');setTimeout(()=>location.reload(),250);}
-function adminLoginModal(){$('modalCard').innerHTML=`<div class="logo" style="font-size:21px;">🛡 Admin</div>
-  <div class="field"><textarea class="inp mono" id="apIn"></textarea></div>
+function adminLoginModal(){$('modalCard').innerHTML=`<div class="logo" style="font-size:21px;">🛡 Admin-Anmeldung</div>
+  <div class="sub">Füge deinen <b>privaten</b> Schlüssel ein</div>
+  <div class="field"><textarea class="inp mono" id="apIn" placeholder='{"kty":"EC","crv":"P-256",...}'></textarea></div>
   <div class="err" id="apErr"></div><button class="btn gold" id="apGo">Laden</button>
   <button class="btn ghost" onclick="closeModal()">Abbrechen</button>`;$('modal').classList.add('on');
   $('apGo').onclick=async()=>{try{const j=JSON.parse($('apIn').value.trim());
     const k=await crypto.subtle.importKey('jwk',j,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);
-    if(!adminPubKey){$('apErr').textContent='Kein ADMIN_PUB im Code.';return;}
+    if(!adminPubKey){$('apErr').textContent='Kein ADMIN_PUB im Code hinterlegt.';sfx('error');return;}
     const pr=await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},k,te.encode('p'));
     if(!await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},adminPubKey,pr,te.encode('p'))){
-      $('apErr').textContent='Passt nicht.';return;}
-    adminPrivKey=k;SS('nx_adminpriv',j);isAdmin=true;applyAdminUI();closeModal();sfx('win');toast('🛡 Verifiziert');
-  }catch(e){$('apErr').textContent='Ungültig.';}};}
+      $('apErr').textContent='Schlüssel passt nicht zum öffentlichen Schlüssel.';sfx('error');return;}
+    adminPrivKey=k;SS('nx_adminpriv',j);isAdmin=true;applyAdminUI();closeModal();sfx('win');toast('🛡 Admin verifiziert');
+  }catch(e){$('apErr').textContent='Ungültiger Schlüssel.';sfx('error');}};}
 function applyAdminUI(){$('btnAdmin').style.display=isAdmin?'flex':'none';
   $('adminTag').style.display=isAdmin?'inline-block':'none';}
 
-/* ══ PROFIL / AVATAR ══ */
+/* ══ PROFIL ══ */
 function buildProfileUI(){const g=$('avGrid');g.innerHTML='';
   AVATARS.forEach(a=>{const b=document.createElement('button');b.textContent=a;
     b.className=(profile.av===a&&!profile.pic)?'sel':'';
@@ -939,11 +938,9 @@ async function boot(user){
   if(bans.includes(me)){$('blocked').classList.add('on');return;}
   renderMeAvatar();applyAdminUI();initSfxUI();show('scHome');
   await preloadAll();drawAll();drawStats();drawBell();renderNotis();pushStatus(true);
-
   const dev=LS('nx_dev',null)||('d'+Math.random().toString(36).slice(2,9));SS('nx_dev',dev);
   net=mqtt.connect(BROKER,{clientId:'nx_'+me+'_'+dev,clean:true,reconnectPeriod:2500,keepalive:25,
     will:{topic:T_PRES,payload:JSON.stringify({u:me,off:1}),qos:0,retain:false}});
-
   net.on('connect',async()=>{
     online=true;$('offBanner').classList.remove('on');
     net.subscribe([T_PRES,T_ROOMS,T_ADMIN,NS+'/pk/+'],{qos:1});
@@ -955,7 +952,6 @@ async function boot(user){
     flushOutbox();});
   net.on('offline',()=>{online=false;$('offBanner').classList.add('on');});
   net.on('close',()=>{online=false;});
-
   net.on('message',async(t,pl)=>{
     const raw=pl.toString();if(!raw)return;
     let d;try{d=JSON.parse(raw)}catch(e){return}
@@ -976,17 +972,14 @@ async function boot(user){
       let m;try{m=await decP(k,d);}catch(e){return;}
       net.publish(t,'',{retain:true,qos:1});
       if(m.k==='friend')return onFriendMsg(m);
-      await handleIncoming({kind:'dm',id:from,hk:'h_dm_'+[me,from].sort().join('_'),ck:'dm:'+from},m);
-      return;}
+      await handleIncoming({kind:'dm',id:from,hk:'h_dm_'+[me,from].sort().join('_'),ck:'dm:'+from},m);return;}
     if(t.indexOf(NS+'/rm/')===0){
       const h=t.split('/')[2],c=roomCtx.get(h);if(!c)return;
       let m;try{m=await decP(c.key,d);}catch(e){return;}
-      await handleIncoming({kind:'room',id:c.name,hk:'h_rm_'+c.name.toLowerCase(),ck:'room:'+c.name.toLowerCase()},m);
-      return;}
+      await handleIncoming({kind:'room',id:c.name,hk:'h_rm_'+c.name.toLowerCase(),ck:'room:'+c.name.toLowerCase()},m);return;}
     if(liveCtx.has(t)){const c=liveCtx.get(t);let m;
       try{m=await decP(c.key,d);}catch(e){return;}
       if(m.u===me)return;onLive(c,m);return;}});
-
   setInterval(()=>{const n=Date.now();
     users.forEach((v,k)=>{if(n-v.t>75000){users.delete(k);onPeerGone(k);}});
     rooms.forEach((v,k)=>{if(n-v.t>90000)rooms.delete(k)});
@@ -1445,7 +1438,7 @@ async function toggleMic(){const b=$('micBtn');if(iAmMuted)return;
   }catch(e){sfx('error');toast('Mikrofon verweigert');}}
   else{rec.stop();recording=false;b.classList.remove('rec');b.textContent='🎙';pushStatus(true);}}
 
-/* ══════════ SPIELE ══════════ */
+/* ══ SPIELE ══ */
 let G=null,pendingInvite=null,gqTimer=null;
 async function gameChannel(peer){const ph=await sha([me,peer].sort().join('<>'));
   return {live:NS+'/lv/d/'+ph,key:dmKeys.get(peer)};}
@@ -1547,14 +1540,11 @@ function openGame(){$('gTitle').textContent=GAMES[G.type].i+' '+GAMES[G.type].n;
 function closeGame(){clearInterval(gqTimer);$('gQuit').classList.remove('on');$('gRem').classList.remove('on');
   $('gameLayer').classList.remove('on');G=null;pushStatus(true);drawStats();}
 function quitGame(){sfx('click');if(G&&!G.solo&&!G.over)gsend({k:'gquit'});closeGame();}
-/* Ergebnis protokollieren */
-function logResult(res){
-  if(!G||G.logged||G.solo)return;G.logged=true;
+function logResult(res){if(!G||G.logged||G.solo)return;G.logged=true;
   recordMatch(G.opp,G.type,res);
   if(res==='w'){sfx('win');addNoti('🏆','Sieg gegen '+G.opp,GAMES[G.type].n+' gewonnen!');}
   else if(res==='l'){sfx('lose');addNoti('💀','Niederlage gegen '+G.opp,GAMES[G.type].n+' verloren');}
   else{sfx('draw');addNoti('🤝','Unentschieden',GAMES[G.type].n+' gegen '+G.opp);}}
-/* Rematch */
 function requestRematch(){if(!G)return;sfx('click');
   if(!G.over)return toast('Erst wenn die Runde vorbei ist');
   if(G.solo){doReset();return;}

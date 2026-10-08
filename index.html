@@ -1,3 +1,23 @@
+Hier ist das **Mega-Update für Nexus Chat**. 
+
+### 🌟 Was ist alles neu & verbessert?
+
+1. 🚪 **Sauberes Raum-Verlassen:** Kein Neuladen mehr nötig – du kannst den Raum jederzeit verlassen, andere werden informiert und du landest flüssig wieder in der Lobby.
+2. 🚫 **Keine Raum- & Beitrags-Dopplungen mehr:** Räume in der Lobby werden intelligent dedupliziert und Beitreten-Meldungen sauber gefiltert.
+3. ✍️ **Live Typing Indicator („...schreibt gerade“):** Zeigt flüssig im Header an, wer gerade eine Nachricht tippt (mit Debounce-Timer).
+4. 👥 **Online-Mitgliederliste (Slide-Over Panel):** Ein elegantes Glas-Seitenmenü zeigt alle Personen, die aktuell live im Raum sind.
+5. 💬 **Nachrichten zitieren & Antworten:** Tippe bei einer Nachricht einfach auf den **Antworten-Pfeil (↩️)**, um sie direkt zu zitieren.
+6. 📷 **Anhang-Vorschau vor dem Senden:** Wähle ein Bild oder Video aus – es erscheint eine schicke Vorschauleiste mit Lösch-Button, bevor du es abschickst.
+7. 😀 **Integrierter Emoji-Picker:** Schnellauswahl der beliebtesten Emojis direkt über der Tastatur.
+8. ✨ **Ultra-flüssige Apple-Style Animationen:** Sanfte Spring-Transitions, lebendige Nachrichten-Pop-ins und samtweiche Übergänge.
+
+---
+
+### Der komplette neue Code für deine `index.html`:
+
+Gehe in dein GitHub-Repository ➔ öffne **`index.html`** ➔ tippe auf das **Stift-Symbol ✏️** ➔ alles löschen ➔ diesen Code komplett einfügen ➔ **Commit changes**.
+
+```html
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -6,7 +26,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Nexus">
-<title>Nexus Rooms & Chat</title>
+<title>Nexus Chat Pro</title>
 <link rel="manifest" href="manifest.json">
 
 <!-- MQTT Echtzeit-Engine -->
@@ -14,23 +34,25 @@
 
 <style>
   :root {
-    --bg-dark: #0a0f1d;
-    --card-bg: rgba(22, 30, 49, 0.85);
+    --bg-dark: #080c16;
+    --card-bg: rgba(18, 24, 40, 0.85);
     --primary: #6366f1;
-    --primary-hover: #4f46e5;
+    --primary-glow: #4f46e5;
     --accent: #06b6d4;
+    --accent-green: #10b981;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --bubble-mine: #4f46e5;
     --bubble-other: #1e293b;
     --safe-top: env(safe-area-inset-top, 20px);
     --safe-bottom: env(safe-area-inset-bottom, 20px);
+    --ease-ios: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-    background: radial-gradient(circle at top, #1e1b4b 0%, var(--bg-dark) 100%);
+    background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, var(--bg-dark) 100%);
     color: var(--text-main);
     height: 100vh;
     display: flex;
@@ -43,23 +65,24 @@
     position: fixed; inset: 0; z-index: 50;
     background: radial-gradient(circle at center, #1e1b4b 0%, #060911 100%);
     display: flex; align-items: center; justify-content: center; padding: 20px;
+    transition: opacity 0.35s var(--ease-ios), transform 0.35s var(--ease-ios);
   }
   .card {
     background: var(--card-bg);
     border: 1px solid rgba(255,255,255,0.12);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
     padding: 28px; border-radius: 28px; width: 100%; max-width: 440px;
     box-shadow: 0 25px 60px rgba(0,0,0,0.6);
     display: flex; flex-direction: column; max-height: 90vh;
+    animation: scaleIn 0.35s var(--ease-ios);
   }
   .card h1 { font-size: 26px; font-weight: 800; text-align: center; margin-bottom: 4px; background: linear-gradient(135deg, #a5b4fc, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   .card p.sub { font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 18px; }
 
-  /* TABS */
   .tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 16px; margin-bottom: 16px; }
-  .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); font-weight: 600; border-radius: 12px; cursor: pointer; transition: 0.2s; font-size: 14px; }
-  .tab-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+  .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); font-weight: 600; border-radius: 12px; cursor: pointer; transition: 0.25s var(--ease-ios); font-size: 13.5px; }
+  .tab-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 14px rgba(99,102,241,0.4); transform: scale(1.02); }
 
   .input-group { margin-bottom: 12px; text-align: left; }
   .input-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; margin-left: 4px; }
@@ -67,110 +90,209 @@
     width: 100%; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.12);
     background: rgba(10, 15, 29, 0.7); color: #fff; font-size: 15px; outline: none; transition: 0.2s;
   }
-  .card input:focus { border-color: var(--accent); box-shadow: 0 0 12px rgba(6, 182, 212, 0.35); }
+  .card input:focus { border-color: var(--accent); box-shadow: 0 0 14px rgba(6, 182, 212, 0.35); }
 
   .btn-action {
     width: 100%; padding: 14px; border-radius: 14px; border: none; font-size: 15px; font-weight: 700;
     color: white; background: linear-gradient(135deg, var(--primary), var(--accent));
     cursor: pointer; margin-top: 6px; box-shadow: 0 8px 25px rgba(99,102,241,0.35);
+    transition: transform 0.15s, opacity 0.15s;
   }
+  .btn-action:active { transform: scale(0.97); opacity: 0.9; }
 
-  /* RAUM LISTE */
-  #room-list-container { overflow-y: auto; max-height: 220px; display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-right: 4px; }
+  #room-list-container { overflow-y: auto; max-height: 200px; display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-right: 2px; }
   .room-item {
     background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
-    padding: 12px 14px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center;
+    transition: transform 0.2s;
   }
-  .room-item-info h4 { font-size: 15px; font-weight: 600; }
-  .room-item-info span { font-size: 12px; color: var(--accent); }
+  .room-item:hover { transform: translateX(2px); }
+  .room-item-info h4 { font-size: 14.5px; font-weight: 600; }
+  .room-item-info span { font-size: 11.5px; color: var(--accent); }
   .btn-room-join { background: var(--primary); border: none; color: #fff; padding: 6px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
-  /* --- CHAT SCREEN --- */
+  /* --- HEADER & STATUS --- */
   header {
     padding-top: calc(var(--safe-top) + 8px);
     padding-bottom: 12px; padding-left: 16px; padding-right: 16px;
     background: rgba(10, 15, 29, 0.85);
-    backdrop-filter: blur(15px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(255,255,255,0.08);
     display: flex; justify-content: space-between; align-items: center; z-index: 20;
   }
-  .room-header-left h2 { font-size: 17px; font-weight: 700; color: #fff; }
-  .room-header-left p { font-size: 12px; color: var(--accent); }
-  .header-actions { display: flex; gap: 8px; }
-  .btn-header { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 7px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .room-header-left { display: flex; flex-direction: column; cursor: pointer; }
+  .room-header-left h2 { font-size: 16.5px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; }
+  .room-header-left p { font-size: 11.5px; color: var(--accent); min-height: 15px; transition: color 0.2s; }
+  .room-header-left p.typing { color: #38bdf8; font-weight: 600; animation: pulseText 1.2s infinite; }
+  
+  .header-actions { display: flex; gap: 6px; align-items: center; }
+  .btn-header {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08);
+    color: #fff; padding: 7px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 4px;
+  }
+  .btn-header:active { transform: scale(0.95); }
+  .btn-leave { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); color: #fca5a5; }
 
-  #chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-  .msg-wrapper { display: flex; flex-direction: column; max-width: 80%; animation: popIn 0.2s cubic-bezier(0.1, 1, 0.1, 1); }
+  /* --- CHAT MESSAGES & BUBBLES --- */
+  #chat-messages {
+    flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+    scroll-behavior: smooth;
+  }
+  .msg-wrapper {
+    display: flex; flex-direction: column; max-width: 82%;
+    animation: messageSlideIn 0.3s var(--ease-ios) forwards;
+    position: relative;
+  }
   .msg-mine-wrapper { align-self: flex-end; align-items: flex-end; }
   .msg-other-wrapper { align-self: flex-start; align-items: flex-start; }
-  .msg-author { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; padding-left: 4px; }
+  
+  .msg-author { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; padding-left: 4px; }
+  
+  .bubble-container { display: flex; align-items: center; gap: 6px; }
+  .msg-mine-wrapper .bubble-container { flex-direction: row-reverse; }
 
-  .msg-bubble { padding: 10px 14px; border-radius: 18px; font-size: 15.5px; line-height: 1.4; word-break: break-word; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
+  .msg-bubble {
+    padding: 10px 14px; border-radius: 20px; font-size: 15px; line-height: 1.4; word-break: break-word;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.25); position: relative;
+  }
   .msg-mine { background: linear-gradient(135deg, var(--bubble-mine), #4338ca); color: #fff; border-bottom-right-radius: 4px; }
   .msg-other { background: var(--bubble-other); color: #f1f5f9; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.08); }
-  
+
+  /* Reply Quote inside Bubble */
+  .quote-box {
+    background: rgba(0,0,0,0.25); border-left: 3px solid var(--accent);
+    padding: 5px 8px; border-radius: 6px; font-size: 12px; margin-bottom: 6px;
+    color: #e2e8f0; max-height: 60px; overflow: hidden;
+  }
+  .quote-box .quote-author { font-weight: 700; color: var(--accent); font-size: 11px; }
+
+  .btn-reply-msg {
+    opacity: 0; background: rgba(255,255,255,0.08); border: none; color: #fff;
+    width: 28px; height: 28px; border-radius: 50%; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: opacity 0.2s, transform 0.2s;
+  }
+  .msg-wrapper:hover .btn-reply-msg, .msg-wrapper:active .btn-reply-msg { opacity: 1; transform: scale(1.05); }
+
   .media-msg img, .media-msg video { width: 100%; max-height: 280px; border-radius: 12px; display: block; margin-top: 4px; object-fit: cover; }
   audio { width: 230px; height: 38px; border-radius: 20px; margin-top: 4px; }
 
-  /* INPUT */
-  .input-area {
-    padding: 10px 14px calc(var(--safe-bottom) + 8px);
+  /* --- ATTACHMENT & REPLY PREVIEW BARS --- */
+  .input-bar-container {
     background: rgba(10, 15, 29, 0.95);
     border-top: 1px solid rgba(255,255,255,0.08);
-    display: flex; gap: 8px; align-items: center;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex; flex-direction: column;
+    padding-bottom: calc(var(--safe-bottom) + 6px);
   }
-  .input-area input[type="text"] {
-    flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
-    padding: 12px 18px; border-radius: 24px; color: white; font-size: 16px; outline: none;
-  }
-  .icon-btn {
-    width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(255,255,255,0.08);
-    color: white; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
-  }
-  .send-btn { background: linear-gradient(135deg, var(--primary), var(--accent)); box-shadow: 0 4px 15px rgba(99,102,241,0.4); }
-  .recording { background: #ef4444 !important; animation: pulse 1s infinite alternate; }
 
-  @keyframes popIn { from { opacity: 0; transform: translateY(8px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
-  @keyframes pulse { from { box-shadow: 0 0 5px #ef4444; } to { box-shadow: 0 0 20px #ef4444; } }
+  .preview-bar {
+    display: none; align-items: center; justify-content: space-between;
+    background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 8px 16px; font-size: 13px; animation: slideDown 0.25s var(--ease-ios);
+  }
+  .preview-bar.active { display: flex; }
+  .preview-content { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+  .preview-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.2); }
+  .btn-cancel-preview { background: transparent; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; padding: 4px; }
+
+  /* --- EMOJI PICKER POPUP --- */
+  #emoji-tray {
+    display: none; grid-template-columns: repeat(8, 1fr); gap: 8px;
+    padding: 12px 14px; background: rgba(18, 24, 40, 0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.08); max-height: 150px; overflow-y: auto;
+  }
+  #emoji-tray.active { display: grid; animation: slideDown 0.2s var(--ease-ios); }
+  .emoji-item { font-size: 24px; text-align: center; cursor: pointer; transition: transform 0.15s; }
+  .emoji-item:active { transform: scale(1.3); }
+
+  /* --- INPUT CONTROLS --- */
+  .input-controls {
+    display: flex; gap: 8px; align-items: center; padding: 8px 14px 4px 14px;
+  }
+  .input-controls input[type="text"] {
+    flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+    padding: 11px 18px; border-radius: 24px; color: white; font-size: 15.5px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .input-controls input[type="text"]:focus { border-color: var(--primary); }
+  .icon-btn {
+    width: 42px; height: 42px; border-radius: 50%; border: none; background: rgba(255,255,255,0.08);
+    color: white; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+    transition: transform 0.15s, background 0.2s;
+  }
+  .icon-btn:active { transform: scale(0.92); }
+  .send-btn { background: linear-gradient(135deg, var(--primary), var(--accent)); box-shadow: 0 4px 15px rgba(99,102,241,0.4); }
+  .recording { background: #ef4444 !important; animation: pulseRed 1s infinite alternate; }
+
+  /* --- MEMBERS DRAWER (SEITENMENÜ) --- */
+  #members-drawer {
+    position: fixed; inset: 0; z-index: 60; pointer-events: none;
+    transition: background 0.3s var(--ease-ios);
+  }
+  #members-drawer.open { pointer-events: auto; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+  .drawer-panel {
+    position: absolute; top: 0; right: -300px; width: 280px; height: 100%;
+    background: var(--card-bg); border-left: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    padding: calc(var(--safe-top) + 20px) 20px 20px 20px;
+    display: flex; flex-direction: column; gap: 14px;
+    transition: transform 0.35s var(--ease-ios); box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+  }
+  #members-drawer.open .drawer-panel { transform: translateX(-300px); }
+  .drawer-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; }
+  .member-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+  .member-item { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+  .online-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+
+  /* ANIMATIONS */
+  @keyframes messageSlideIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+  @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 160px; } }
+  @keyframes pulseRed { from { box-shadow: 0 0 4px #ef4444; } to { box-shadow: 0 0 18px #ef4444; } }
+  @keyframes pulseText { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 </style>
 </head>
 <body>
 
-<!-- LOBBY / RAUM VERWALTUNG -->
+<!-- LOBBY SCREEN -->
 <div id="lobby-screen">
   <div class="card">
-    <h1>Nexus Rooms</h1>
+    <h1>Nexus Chat</h1>
     <p class="sub">Erstelle Räume oder trete deinen Freunden bei</p>
 
-    <!-- NICKNAME -->
     <div class="input-group">
       <label>Dein Spitzname</label>
-      <input type="text" id="username" placeholder="z. B. Sam" maxlength="15">
+      <input type="text" id="username" placeholder="z. B. Alex" maxlength="15">
     </div>
 
-    <!-- TABS -->
     <div class="tabs">
       <button class="tab-btn active" id="tabCreateBtn" onclick="switchTab('create')">➕ Raum erstellen</button>
       <button class="tab-btn" id="tabJoinBtn" onclick="switchTab('join')">🔍 Räume & Beitritt</button>
     </div>
 
-    <!-- TAB 1: ERSTELLEN -->
+    <!-- TAB: ERSTELLEN -->
     <div id="tab-create">
       <div class="input-group">
         <label>Raum-Name</label>
-        <input type="text" id="newRoomName" placeholder="z. B. GamerLounge" maxlength="20">
+        <input type="text" id="newRoomName" placeholder="z. B. Geheimclub" maxlength="20">
       </div>
       <div class="input-group">
         <label>Passwort 🔒 (optional)</label>
         <input type="password" id="newRoomPass" placeholder="Leer lassen für öffentlich">
       </div>
-      <button class="btn-action" onclick="createRoom()">Raum jetzt erstellen & starten 🚀</button>
+      <button class="btn-action" onclick="createRoom()">Raum starten 🚀</button>
     </div>
 
-    <!-- TAB 2: BEITRETEN & LISTE -->
+    <!-- TAB: BEITRETEN -->
     <div id="tab-join" style="display:none;">
       <div class="input-group">
-        <label>Direkt-Beitritt (Raumname & Passwort)</label>
+        <label>Direkt-Beitritt</label>
         <div style="display:flex; gap:6px;">
           <input type="text" id="directRoomName" placeholder="Raumname">
           <input type="password" id="directRoomPass" placeholder="Passwort">
@@ -178,9 +300,9 @@
       </div>
       <button class="btn-action" style="margin-bottom:12px;" onclick="joinDirect()">Beitreten ➔</button>
 
-      <label style="font-size:12px; font-weight:600; color:var(--text-muted); text-align:left;">Aktive Live-Räume:</label>
+      <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Aktive Räume:</label>
       <div id="room-list-container">
-        <div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px;">Suche nach Räumen...</div>
+        <div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px;">Keine Räume online...</div>
       </div>
     </div>
   </div>
@@ -188,26 +310,72 @@
 
 <!-- CHAT SCREEN -->
 <header>
-  <div class="room-header-left">
+  <div class="room-header-left" onclick="toggleMembersDrawer(true)">
     <h2 id="display-room">🔒 Raum</h2>
-    <p>● Live & Verschlüsselt</p>
+    <p id="room-status-sub">● 1 Mitglied online</p>
   </div>
   <div class="header-actions">
-    <button class="btn-header" onclick="copyInviteLink()">🔗 Einladen</button>
-    <button class="btn-header" onclick="location.reload()">Lobby</button>
+    <button class="btn-header" onclick="toggleMembersDrawer(true)">👥 <span id="member-badge">1</span></button>
+    <button class="btn-header" onclick="copyInviteLink()">🔗</button>
+    <button class="btn-header btn-leave" onclick="leaveRoom()">🚪 Verlassen</button>
   </div>
 </header>
 
 <div id="chat-messages"></div>
 
-<div class="input-area">
-  <button class="icon-btn" onclick="document.getElementById('fileIn').click()">📎</button>
-  <input type="file" id="fileIn" accept="image/*,video/*" style="display:none;" onchange="handleFile(this)">
+<!-- INPUT BEREICH MIT VORSCHAU & EMOJIS -->
+<div class="input-bar-container">
+  
+  <!-- Reply Quote Preview -->
+  <div id="reply-preview-bar" class="preview-bar">
+    <div class="preview-content">
+      <div style="font-size:16px;">↩️</div>
+      <div>
+        <div style="font-size:11px; color:var(--accent); font-weight:700;" id="reply-author-label">Antwort an Alex</div>
+        <div style="color:var(--text-muted); font-size:12px; max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="reply-text-label">Text</div>
+      </div>
+    </div>
+    <button class="btn-cancel-preview" onclick="cancelReply()">✕</button>
+  </div>
 
-  <input type="text" id="msgIn" placeholder="Nachricht schreiben..." autocomplete="off" onkeydown="if(event.key==='Enter') sendText()">
+  <!-- Attachment Preview -->
+  <div id="attachment-preview-bar" class="preview-bar">
+    <div class="preview-content">
+      <div id="attachment-thumb-wrap"></div>
+      <div>
+        <div style="font-size:12px; font-weight:700;" id="attachment-name-label">Datei</div>
+        <div style="color:var(--text-muted); font-size:11px;">Bereit zum Senden</div>
+      </div>
+    </div>
+    <button class="btn-cancel-preview" onclick="cancelAttachment()">✕</button>
+  </div>
 
-  <button class="icon-btn" id="voiceBtn" onclick="toggleVoice()">🎙</button>
-  <button class="icon-btn send-btn" onclick="sendText()">➤</button>
+  <!-- Emoji Tray -->
+  <div id="emoji-tray"></div>
+
+  <!-- Controls -->
+  <div class="input-controls">
+    <button class="icon-btn" onclick="document.getElementById('fileIn').click()">📎</button>
+    <input type="file" id="fileIn" accept="image/*,video/*" style="display:none;" onchange="handleFileSelect(this)">
+
+    <button class="icon-btn" onclick="toggleEmojiTray()">😀</button>
+
+    <input type="text" id="msgIn" placeholder="Nachricht schreiben..." autocomplete="off" oninput="handleTyping()" onkeydown="if(event.key==='Enter') sendCurrentMessage()">
+
+    <button class="icon-btn" id="voiceBtn" onclick="toggleVoice()">🎙</button>
+    <button class="icon-btn send-btn" onclick="sendCurrentMessage()">➤</button>
+  </div>
+</div>
+
+<!-- MEMBERS DRAWER -->
+<div id="members-drawer" onclick="toggleMembersDrawer(false)">
+  <div class="drawer-panel" onclick="event.stopPropagation()">
+    <div class="drawer-header">
+      <h3 style="font-size:16px;">Raum-Mitglieder</h3>
+      <button style="background:none; border:none; color:#fff; font-size:18px; cursor:pointer;" onclick="toggleMembersDrawer(false)">✕</button>
+    </div>
+    <div class="member-list" id="member-items-wrap"></div>
+  </div>
 </div>
 
 <script>
@@ -220,11 +388,33 @@
   let mediaRecorder = null;
   let audioChunks = [];
   let isRecording = false;
+
   let discoveredRooms = {};
+  let members = new Map();
+  let typingTimeout = null;
+  let remoteTypingTimeout = null;
+  let heartbeatInterval = null;
 
-  const LOBBY_TOPIC = "nexus_v4/global_lobby_list";
+  let replyingTo = null;
+  let pendingAttachment = null;
 
-  // Initiale Verbindung zur Lobby für Raumliste
+  const LOBBY_TOPIC = "nexus_v5/global_lobby_list";
+  const EMOJIS = ["😀","😂","😍","🔥","👍","❤️","🎉","🚀","😎","🥺","💀","💩","👀","✨","🙌","💯","🤝","👏","🥳","🍕","🎮","⚡","🤫","✌️"];
+
+  // Emojis rendern
+  const tray = document.getElementById('emoji-tray');
+  EMOJIS.forEach(e => {
+    const span = document.createElement('span');
+    span.className = 'emoji-item';
+    span.textContent = e;
+    span.onclick = () => {
+      document.getElementById('msgIn').value += e;
+      document.getElementById('msgIn').focus();
+    };
+    tray.appendChild(span);
+  });
+
+  // Lobby MQTT
   lobbyClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
   lobbyClient.on('connect', () => {
     lobbyClient.subscribe(LOBBY_TOPIC);
@@ -235,7 +425,7 @@
     try {
       const data = JSON.parse(payload.toString());
       if(data.type === 'announce_room') {
-        discoveredRooms[data.room] = { hasPass: data.hasPass, time: Date.now() };
+        discoveredRooms[data.room.toLowerCase()] = { name: data.room, hasPass: data.hasPass, time: Date.now() };
         renderRoomList();
       }
     } catch(e){}
@@ -252,20 +442,20 @@
     const list = document.getElementById('room-list-container');
     const rooms = Object.keys(discoveredRooms);
     if(rooms.length === 0) {
-      list.innerHTML = `<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px;">Noch keine Räume offen. Erstelle den ersten!</div>`;
+      list.innerHTML = `<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px;">Keine Räume online...</div>`;
       return;
     }
     list.innerHTML = "";
-    rooms.forEach(r => {
-      const info = discoveredRooms[r];
+    rooms.forEach(k => {
+      const info = discoveredRooms[k];
       const div = document.createElement('div');
       div.className = 'room-item';
       div.innerHTML = `
         <div class="room-item-info">
-          <h4>${info.hasPass ? '🔒' : '🌐'} ${escapeHtml(r)}</h4>
+          <h4>${info.hasPass ? '🔒' : '🌐'} ${escapeHtml(info.name)}</h4>
           <span>${info.hasPass ? 'Passwortgeschützt' : 'Öffentlich'}</span>
         </div>
-        <button class="btn-room-join" onclick="selectFromList('${escapeHtml(r)}', ${info.hasPass})">Beitreten</button>
+        <button class="btn-room-join" onclick="selectFromList('${escapeHtml(info.name)}', ${info.hasPass})">Beitreten</button>
       `;
       list.appendChild(div);
     });
@@ -274,7 +464,7 @@
   function selectFromList(room, hasPass) {
     let pass = "";
     if(hasPass) {
-      pass = prompt("Gib das Passwort für Raum '" + room + "' ein:");
+      pass = prompt("Passwort für '" + room + "':");
       if(pass === null) return;
     }
     document.getElementById('directRoomName').value = room;
@@ -289,25 +479,17 @@
 
   async function createRoom() {
     const user = document.getElementById('username').value.trim();
-    const room = document.getElementById('newRoomName').value.trim().toLowerCase();
+    const room = document.getElementById('newRoomName').value.trim();
     const pass = document.getElementById('newRoomPass').value;
-
-    if(!user || !room) {
-      alert("Bitte gib deinen Namen und einen Raumnamen ein!");
-      return;
-    }
+    if(!user || !room) return alert("Bitte Name und Raumname eingeben!");
     startChat(user, room, pass);
   }
 
   async function joinDirect() {
     const user = document.getElementById('username').value.trim();
-    const room = document.getElementById('directRoomName').value.trim().toLowerCase();
+    const room = document.getElementById('directRoomName').value.trim();
     const pass = document.getElementById('directRoomPass').value;
-
-    if(!user || !room) {
-      alert("Bitte gib deinen Namen und den Raumnamen ein!");
-      return;
-    }
+    if(!user || !room) return alert("Bitte Name und Raumname eingeben!");
     startChat(user, room, pass);
   }
 
@@ -315,54 +497,69 @@
     currentUser = user;
     currentRoom = room;
     currentPass = pass;
+    members.clear();
+    members.set(currentUser, Date.now());
 
-    const roomHash = await hash(room + "____" + pass);
-    topic = "nexus_v4/room/" + roomHash;
+    const roomHash = await hash(room.toLowerCase() + "____" + pass);
+    topic = "nexus_v5/room/" + roomHash;
 
     document.getElementById('display-room').textContent = (pass ? '🔒 ' : '🌐 ') + room;
-    document.getElementById('lobby-screen').style.display = "none";
+    document.getElementById('lobby-screen').style.transform = "scale(0.92)";
+    document.getElementById('lobby-screen').style.opacity = "0";
+    setTimeout(() => { document.getElementById('lobby-screen').style.display = "none"; }, 350);
+
+    updateMemberUI();
 
     client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
     client.on('connect', () => {
       client.subscribe(topic);
-      broadcast({ type: 'sys', text: `${currentUser} ist beigetreten 👋` });
-      
-      // Kündige den Raum in der Lobby an
-      lobbyClient.publish(LOBBY_TOPIC, JSON.stringify({
-        type: 'announce_room',
-        room: room,
-        hasPass: !!pass
-      }));
+      broadcast({ type: 'presence', action: 'join' });
+
+      // Lobby Ankündigung
+      lobbyClient.publish(LOBBY_TOPIC, JSON.stringify({ type: 'announce_room', room: room, hasPass: !!pass }));
+
+      // Heartbeat alle 15 Sekunden
+      heartbeatInterval = setInterval(() => {
+        broadcast({ type: 'presence', action: 'ping' });
+        // Bereinige inaktive User (>40 Sek)
+        const now = Date.now();
+        members.forEach((time, name) => {
+          if(name !== currentUser && now - time > 40000) members.delete(name);
+        });
+        updateMemberUI();
+      }, 15000);
     });
 
     client.on('message', (t, payload) => {
       if(t === topic) {
         try {
-          renderMessage(JSON.parse(payload.toString()));
+          handleIncomingMessage(JSON.parse(payload.toString()));
         } catch(e){}
       }
     });
   }
 
-  function copyInviteLink() {
-    const url = window.location.origin + window.location.pathname + `?room=${encodeURIComponent(currentRoom)}`;
-    navigator.clipboard.writeText(url).then(() => {
-      alert("Einladungslink in Zwischenablage kopiert! Schicke ihn deinem Freund.");
-    }).catch(() => {
-      prompt("Kopiere diesen Link für deine Freunde:", url);
-    });
-  }
+  function leaveRoom() {
+    if(confirm("Möchtest du den Raum wirklich verlassen?")) {
+      broadcast({ type: 'presence', action: 'leave' });
+      clearInterval(heartbeatInterval);
+      if(client) client.end();
+      client = null;
 
-  // URL-Parameter prüfen (für schnelles Beitreten per Link)
-  window.addEventListener('load', () => {
-    const params = new URLSearchParams(window.location.search);
-    const roomParam = params.get('room');
-    if(roomParam) {
-      switchTab('join');
-      document.getElementById('directRoomName').value = roomParam;
+      document.getElementById('chat-messages').innerHTML = "";
+      cancelReply();
+      cancelAttachment();
+      toggleMembersDrawer(false);
+
+      const lobby = document.getElementById('lobby-screen');
+      lobby.style.display = "flex";
+      setTimeout(() => {
+        lobby.style.transform = "scale(1)";
+        lobby.style.opacity = "1";
+      }, 10);
     }
-  });
+  }
 
   function broadcast(data) {
     if(!client) return;
@@ -371,15 +568,70 @@
     client.publish(topic, JSON.stringify(data));
   }
 
-  function sendText() {
-    const input = document.getElementById('msgIn');
-    const val = input.value.trim();
-    if(!val) return;
-    broadcast({ type: 'text', text: val });
-    input.value = "";
+  function handleTyping() {
+    broadcast({ type: 'typing' });
   }
 
-  function handleFile(input) {
+  function handleIncomingMessage(data) {
+    if(data.type === 'presence') {
+      if(data.action === 'join' && data.sender !== currentUser) {
+        if(!members.has(data.sender)) renderSysMessage(`${data.sender} ist beigetreten 👋`);
+        members.set(data.sender, Date.now());
+      } else if(data.action === 'leave' && data.sender !== currentUser) {
+        members.delete(data.sender);
+        renderSysMessage(`${data.sender} hat den Raum verlassen.`);
+      } else if(data.action === 'ping' && data.sender !== currentUser) {
+        members.set(data.sender, Date.now());
+      }
+      updateMemberUI();
+      return;
+    }
+
+    if(data.type === 'typing' && data.sender !== currentUser) {
+      showTypingIndicator(data.sender);
+      return;
+    }
+
+    renderChatMessage(data);
+  }
+
+  function showTypingIndicator(name) {
+    const sub = document.getElementById('room-status-sub');
+    sub.textContent = `✍️ ${name} tippt...`;
+    sub.classList.add('typing');
+    clearTimeout(remoteTypingTimeout);
+    remoteTypingTimeout = setTimeout(() => {
+      sub.classList.remove('typing');
+      updateMemberUI();
+    }, 2500);
+  }
+
+  function updateMemberUI() {
+    const sub = document.getElementById('room-status-sub');
+    if(!sub.classList.contains('typing')) {
+      sub.textContent = `● ${members.size} Mitglied${members.size > 1 ? 'er' : ''} online`;
+    }
+    document.getElementById('member-badge').textContent = members.size;
+
+    const wrap = document.getElementById('member-items-wrap');
+    wrap.innerHTML = "";
+    members.forEach((_, name) => {
+      const div = document.createElement('div');
+      div.className = 'member-item';
+      div.innerHTML = `<div class="online-dot"></div><span>${escapeHtml(name)} ${name === currentUser ? '(Du)' : ''}</span>`;
+      wrap.appendChild(div);
+    });
+  }
+
+  function toggleMembersDrawer(open) {
+    document.getElementById('members-drawer').className = open ? 'open' : '';
+  }
+
+  function toggleEmojiTray() {
+    tray.classList.toggle('active');
+  }
+
+  function handleFileSelect(input) {
     const file = input.files[0];
     if(!file) return;
 
@@ -397,19 +649,67 @@
             else { w = Math.round((w * maxDim) / h); h = maxDim; }
           }
           canvas.width = w; canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, w, h);
-          broadcast({ type: 'image', mediaUrl: canvas.toDataURL('image/jpeg', 0.7) });
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const compressed = canvas.toDataURL('image/jpeg', 0.7);
+          setAttachmentPreview('image', compressed, file.name);
         };
       };
       reader.readAsDataURL(file);
     } else if(file.type.startsWith('video/')) {
-      if(file.size > 5 * 1024 * 1024) { alert("Video darf max. 5MB groß sein!"); return; }
+      if(file.size > 5 * 1024 * 1024) return alert("Video darf max. 5MB groß sein!");
       const reader = new FileReader();
-      reader.onload = (e) => broadcast({ type: 'video', mediaUrl: e.target.result });
+      reader.onload = (e) => setAttachmentPreview('video', e.target.result, file.name);
       reader.readAsDataURL(file);
     }
     input.value = "";
+  }
+
+  function setAttachmentPreview(type, url, name) {
+    pendingAttachment = { type, url, name };
+    const wrap = document.getElementById('attachment-thumb-wrap');
+    if(type === 'image') wrap.innerHTML = `<img src="${url}" class="preview-thumb">`;
+    else wrap.innerHTML = `<div class="preview-thumb" style="display:flex;align-items:center;justify-content:center;background:#000;">🎬</div>`;
+    document.getElementById('attachment-name-label').textContent = name;
+    document.getElementById('attachment-preview-bar').classList.add('active');
+  }
+
+  function cancelAttachment() {
+    pendingAttachment = null;
+    document.getElementById('attachment-preview-bar').classList.remove('active');
+  }
+
+  function startReply(id, sender, textPreview) {
+    replyingTo = { id, sender, text: textPreview };
+    document.getElementById('reply-author-label').textContent = `Antwort an ${sender}`;
+    document.getElementById('reply-text-label').textContent = textPreview;
+    document.getElementById('reply-preview-bar').classList.add('active');
+    document.getElementById('msgIn').focus();
+  }
+
+  function cancelReply() {
+    replyingTo = null;
+    document.getElementById('reply-preview-bar').classList.remove('active');
+  }
+
+  function sendCurrentMessage() {
+    const input = document.getElementById('msgIn');
+    const val = input.value.trim();
+
+    if(!val && !pendingAttachment) return;
+
+    const payload = {
+      id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      type: pendingAttachment ? pendingAttachment.type : 'text',
+      text: val,
+      mediaUrl: pendingAttachment ? pendingAttachment.url : null,
+      replyTo: replyingTo ? { sender: replyingTo.sender, text: replyingTo.text } : null
+    };
+
+    broadcast(payload);
+    input.value = "";
+    cancelReply();
+    cancelAttachment();
+    tray.classList.remove('active');
   }
 
   async function toggleVoice() {
@@ -425,7 +725,15 @@
         mediaRecorder.onstop = () => {
           const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/mp4' });
           const reader = new FileReader();
-          reader.onload = () => broadcast({ type: 'audio', mediaUrl: reader.result });
+          reader.onload = () => {
+            broadcast({
+              id: 'msg_' + Date.now(),
+              type: 'audio',
+              mediaUrl: reader.result,
+              replyTo: replyingTo ? { sender: replyingTo.sender, text: replyingTo.text } : null
+            });
+            cancelReply();
+          };
           reader.readAsDataURL(blob);
           stream.getTracks().forEach(track => track.stop());
         };
@@ -445,36 +753,55 @@
     }
   }
 
-  function renderMessage(data) {
+  function renderSysMessage(text) {
+    const box = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.style.alignSelf = 'center';
+    div.style.animation = 'messageSlideIn 0.3s var(--ease-ios)';
+    div.innerHTML = `<span style="font-size:12px; color:var(--text-muted); background:rgba(255,255,255,0.06); padding:4px 12px; border-radius:12px;">${escapeHtml(text)}</span>`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function renderChatMessage(data) {
     const box = document.getElementById('chat-messages');
     const isMine = data.sender === currentUser;
 
     const wrapper = document.createElement('div');
     wrapper.className = `msg-wrapper ${isMine ? 'msg-mine-wrapper' : 'msg-other-wrapper'}`;
 
-    if(data.type === 'sys') {
-      wrapper.style.alignSelf = 'center';
-      wrapper.innerHTML = `<span style="font-size:12px; color:var(--text-muted); background:rgba(255,255,255,0.06); padding:4px 12px; border-radius:12px;">${escapeHtml(data.text)}</span>`;
-      box.appendChild(wrapper);
-      box.scrollTop = box.scrollHeight;
-      return;
+    let replySnippet = "";
+    if(data.replyTo) {
+      replySnippet = `
+        <div class="quote-box">
+          <div class="quote-author">${escapeHtml(data.replyTo.sender)}</div>
+          <div>${escapeHtml(data.replyTo.text)}</div>
+        </div>
+      `;
     }
 
-    let content = "";
-    if(data.type === 'text') {
-      content = `<div>${escapeHtml(data.text)}</div>`;
-    } else if(data.type === 'image') {
-      content = `<div class="media-msg"><img src="${data.mediaUrl}"></div>`;
+    let mediaContent = "";
+    let previewText = data.text || "Anhang";
+    if(data.type === 'image') {
+      mediaContent = `<div class="media-msg"><img src="${data.mediaUrl}"></div>`;
     } else if(data.type === 'video') {
-      content = `<div class="media-msg"><video src="${data.mediaUrl}" controls playsinline></video></div>`;
+      mediaContent = `<div class="media-msg"><video src="${data.mediaUrl}" controls playsinline></video></div>`;
     } else if(data.type === 'audio') {
-      content = `<div>🎙 Sprachnachricht<br><audio src="${data.mediaUrl}" controls playsinline></audio></div>`;
+      previewText = "🎙 Sprachnachricht";
+      mediaContent = `<div>🎙 Sprachnachricht<br><audio src="${data.mediaUrl}" controls playsinline></audio></div>`;
     }
+
+    const textContent = data.text ? `<div>${escapeHtml(data.text)}</div>` : '';
 
     wrapper.innerHTML = `
       ${!isMine ? `<div class="msg-author">${escapeHtml(data.sender)} • ${data.time}</div>` : ''}
-      <div class="msg-bubble ${isMine ? 'msg-mine' : 'msg-other'}">
-        ${content}
+      <div class="bubble-container">
+        <div class="msg-bubble ${isMine ? 'msg-mine' : 'msg-other'}">
+          ${replySnippet}
+          ${textContent}
+          ${mediaContent}
+        </div>
+        <button class="btn-reply-msg" title="Antworten" onclick="startReply('${data.id}', '${escapeHtml(data.sender)}', '${escapeHtml(previewText)}')">↩️</button>
       </div>
     `;
 
@@ -482,10 +809,38 @@
     box.scrollTop = box.scrollHeight;
   }
 
+  function copyInviteLink() {
+    const url = window.location.origin + window.location.pathname + `?room=${encodeURIComponent(currentRoom)}`;
+    if(navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => alert("🔗 Einladungs-Link kopiert!"));
+    } else {
+      prompt("Kopiere den Link:", url);
+    }
+  }
+
   function escapeHtml(str) {
+    if(!str) return '';
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
+
+  // Raum-Parameter aus URL verarbeiten
+  window.addEventListener('load', () => {
+    const params = new URLSearchParams(window.location.search);
+    const roomParam = params.get('room');
+    if(roomParam) {
+      switchTab('join');
+      document.getElementById('directRoomName').value = roomParam;
+    }
+  });
 </script>
 
 </body>
 </html>
+```
+
+---
+
+### Jetzt auf deinem iPad testen:
+1. Nach dem **Commit** auf GitHub ca. 1 Minute warten.
+2. Öffne die App auf deinem iPad (am besten einmal komplett schließen und neu starten, damit der Cache geleert wird).
+3. Teste es mit einem Freund oder auf zwei Tabs: Du wirst sofort sehen, wie samtweich die Übergänge laufen, wie die Mitgliederliste live mitzählt und wie flüssig das Antworten funktioniert!

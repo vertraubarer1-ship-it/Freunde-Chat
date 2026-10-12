@@ -1,15 +1,38 @@
 {
-  "name": "Mein Freunde Chat",
-  "short_name": "Chat",
+  "id": "nexus-chat",
+  "name": "Nexus Chat – Freunde-Chat",
+  "short_name": "Nexus",
+  "description": "Ende-zu-Ende-verschlüsselter Chat mit Räumen, Freunden, Sprachnachrichten und Minispielen.",
+  "lang": "de",
+  "dir": "ltr",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#e5ddd5",
-  "theme_color": "#075e54",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#070b14",
+  "theme_color": "#070b14",
+  "categories": ["social", "communication", "games"],
   "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ],
+  "shortcuts": [
     {
-      "src": "https://play-lh.googleusercontent.com/7KIKAVA8dbNg7HksMWITMzhK_7oqbM0Yi6Vlxs29GHxhdyomQfAzyjZiSc3pfzzpvU5HFeOmwrLHHjacnK4jbw=w480-h960",
-      "sizes": "512x512",
-      "type": "image/png"
+      "name": "Spiele",
+      "short_name": "Spiele",
+      "description": "Tic Tac Toe, Memory, Tank Wars, Schiffe versenken und mehr",
+      "url": "./index.html?tab=games",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Raum beitreten",
+      "short_name": "Beitreten",
+      "description": "Einem Raum per Name und Passwort beitreten",
+      "url": "./index.html?tab=join",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

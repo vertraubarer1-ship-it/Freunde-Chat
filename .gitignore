@@ -1,0 +1,9 @@
+# Lokale Geheimnisse – niemals veröffentlichen
+admin-key.local.txt
+
+# Abhängigkeiten der Testwerkzeuge
+node_modules/
+
+# Temporäres
+*.log
+.DS_Store

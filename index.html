@@ -174,7 +174,12 @@ flex-direction:column;gap:9px;position:relative;}
 @keyframes pop{from{opacity:0;transform:translate3d(0,12px,0) scale(.97);}to{opacity:1;transform:none;}}
 .row.me{align-self:flex-end;align-items:flex-end;}
 .row.you{align-self:flex-start;align-items:flex-start;}
-.who{font-size:10.5px;color:var(--muted);margin:0 0 3px 5px;}
+.who{font-size:10.5px;color:var(--muted);margin:0 0 3px 5px;display:flex;align-items:center;}
+.who b{color:#a5b4fc;font-weight:700;margin:0 4px;}
+.mini-av{width:17px;height:17px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+font-size:11px;background:linear-gradient(135deg,var(--primary),var(--accent));overflow:hidden;flex-shrink:0;}
+.mini-av img{width:100%;height:100%;object-fit:cover;}
+.row.grp{margin-top:-5px;}
 .bwrap{display:flex;align-items:center;gap:6px;}
 .row.me .bwrap{flex-direction:row-reverse;}
 .bub{padding:10px 14px;border-radius:19px;font-size:15px;line-height:1.42;word-break:break-word;
@@ -338,6 +343,9 @@ font-size:26px;font-weight:800;}
 #blocked{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
 background:#0a0408;padding:28px;text-align:center;flex-direction:column;gap:14px;}
 #blocked.on{display:flex;}
+#secCover{position:fixed;inset:0;z-index:300;background:#000;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;}
+#secCover.on{display:flex;}
 ::-webkit-scrollbar{width:0;height:0;}
 </style>
 </head>
@@ -553,6 +561,10 @@ background:#0a0408;padding:28px;text-align:center;flex-direction:column;gap:14px
     <button class="btn ghost" onclick="closeGame()" style="max-width:200px;">Jetzt schließen</button></div>
 </div></div>
 
+<div id="secCover"><div style="font-size:54px;">🛡️</div>
+  <div style="font-size:15px;font-weight:800;color:#475569;">Nexus ist geschützt</div>
+  <div style="font-size:12px;color:#334155;">Screenshot-Schutz aktiv</div></div>
+
 <div id="blocked"><div style="font-size:52px;">🚫</div>
   <div style="font-size:21px;font-weight:800;">Konto gesperrt</div>
   <div style="color:var(--muted);font-size:14px;max-width:320px;">Von einem Administrator gesperrt.</div></div>
@@ -593,6 +605,7 @@ let profile={av:'😎',pic:null};
 let isRoomOwner=false,mutedUsers=new Set(),iAmMuted=false;
 let msgStore=new Map(),rxStore=new Map(),lbCur=null,qkIdx=0,qkItems=[];
 let lastAct=Date.now(),myTyping=0,picking=false,lastStatus='';
+let secProt=true,secShot=true,hiddenAt=0,typers=new Map();
 const $=id=>document.getElementById(id);
 const tray=$('tray'),fileIn=$('fileIn'),pfIn=$('pfIn');
 EMO.forEach(e=>{const s=document.createElement('span');s.textContent=e;
@@ -770,10 +783,47 @@ function statusDotClass(s){
 ['touchstart','mousedown','keydown','scroll','pointerdown'].forEach(e=>
   document.addEventListener(e,()=>{lastAct=Date.now();},{passive:true}));
 document.addEventListener('visibilitychange',()=>{lastAct=Date.now();pushStatus(true);});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){hiddenAt=Date.now();secCover(true);}
+  else{secCover(false);shotReturn();}});
+window.addEventListener('blur',()=>{if(document.visibilityState==='visible'){hiddenAt=Date.now();secCover(true);}});
+window.addEventListener('focus',()=>{if(!document.hidden){secCover(false);shotReturn();}});
 function pushStatus(force){const s=currentStatus();
   if(!force&&s===lastStatus)return;
   lastStatus=s;$('meLabel').textContent=s;
   if(net&&net.connected)net.publish(T_PRES,JSON.stringify({u:me,st:s,admin:isAdmin,prof:profile}),{qos:0});}
+
+/* ══ SCREENSHOT-SCHUTZ (FLAG_SECURE fürs Web) ══ */
+function secCover(on){$('secCover').classList.toggle('on',on&&secProt);}
+function toggleSecProt(b){secProt=!secProt;SS('nx_secprot',secProt);
+  b.classList.toggle('on',secProt);if(!secProt)secCover(false);
+  toast(secProt?'🛡️ Screenshot-Schutz aktiv':'Screenshot-Schutz aus');}
+function toggleSecShot(b){secShot=!secShot;SS('nx_secshot',secShot);
+  b.classList.toggle('on',secShot);
+  toast(secShot?'📸 Screenshot-Meldungen aktiv':'Screenshot-Meldungen aus');}
+function shotReturn(){
+  if(!hiddenAt)return;const dur=Date.now()-hiddenAt;hiddenAt=0;
+  if(dur<1000)return; // zu kurz – nur schneller App-Wechsel
+  shotNotify(dur<2500?'screenshot':'recording');}
+function shotTxt(d){return (d.kind==='screenshot'?'📸 ':'🎥 ')+d.u+' '+
+  (d.kind==='screenshot'?'hat einen Screenshot gemacht':'nimmt den Bildschirm auf');}
+async function shotNotify(kind){
+  if(!secShot||!net||!net.connected)return;
+  const d={k:'shot',id:'s'+Date.now()+Math.random().toString(36).slice(2,6),kind:kind,u:me,
+    ts:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};
+  let sent=0;
+  for(const [topic,c] of liveCtx){
+    try{
+      const t=c.kind==='room'?NS+'/rm/'+topic.split('/').pop()+'/'+d.id:NS+'/in/'+c.id+'/'+d.id;
+      const enc=await encP(c.key,d);if(c.kind==='dm')enc.f=me;
+      net.publish(t,JSON.stringify(enc),{retain:true,qos:1});
+      await pushHist(c.hk,d);
+      if($('scChat').classList.contains('active')&&chatId===c.ck)sysMsg(shotTxt(d));
+      sent++;
+    }catch(e){}}
+  if(sent)sfx('pop');
+  toast(kind==='screenshot'?'📸 Screenshot erkannt – Chats benachrichtigt'
+    :'🎥 Bildschirmaufnahme erkannt – Chats benachrichtigt');}
 
 /* ══ KRYPTO ══ */
 async function deriveRoomKey(s){const b=await crypto.subtle.importKey('raw',te.encode(s),'PBKDF2',false,['deriveKey']);
@@ -870,6 +920,12 @@ function showSecurity(){$('modalCard').innerHTML=`<div class="logo" style="font-
   <div class="sw" style="margin-top:12px;"><div><div class="t">🔊 Sound-Effekte</div>
     <div class="d">Töne bei Klicks, Nachrichten, Spielen</div></div>
     <button class="toggle ${sfxOff?'':'on'}" onclick="toggleSfx();this.classList.toggle('on')"></button></div>
+  <div class="sw"><div><div class="t">🛡️ Screenshot-Schutz</div>
+    <div class="d">Bildschirm bei App-Wechsel schwarz (FLAG_SECURE fürs Web)</div></div>
+    <button class="toggle ${secProt?'on':''}" onclick="toggleSecProt(this)"></button></div>
+  <div class="sw"><div><div class="t">📸 Screenshot-Meldung im Chat</div>
+    <div class="d">„X hat einen Screenshot gemacht“ an Chats senden</div></div>
+    <button class="toggle ${secShot?'on':''}" onclick="toggleSecShot(this)"></button></div>
   <button class="btn ghost" onclick="askNotif()">🔔 Push-Benachrichtigungen erlauben</button>
   <button class="btn ghost" id="mNew">🔑 Neuer Wiederherstellungs-Code</button>
   <div class="secttl" style="margin-top:16px;">Admin</div>
@@ -934,6 +990,7 @@ async function boot(user){
   bans=LS('nx_bans',[]);modlog=LS('nx_modlog',[]);ownedRooms=LS('nx_owned',[]);
   joined=LS('nx_joined',[]);unread=LS('nx_unread',{});outbox=LS('nx_outbox',[]);
   matches=LS('nx_matches',[]);notis=LS('nx_notis',[]);
+  secProt=LS('nx_secprot',true);secShot=LS('nx_secshot',true);
   await idbOpen();await initECDH();await loadAdminPub();if(await loadAdminPriv())isAdmin=true;
   if(bans.includes(me)){$('blocked').classList.add('on');return;}
   renderMeAvatar();applyAdminUI();initSfxUI();show('scHome');
@@ -966,6 +1023,7 @@ async function boot(user){
     if(t===T_ADMIN)return onAdminRaw(d);
     if(t.indexOf(NS+'/in/'+me+'/')===0){
       const from=d.f;if(!from||bans.includes(from))return;
+      if(d.plain&&d.fr){net.publish(t,'',{retain:true,qos:1});return onFriendMsg(d.fr);}
       let k=dmKeys.get(from);
       if(!k){const pk=pubkeys.get(from)||LS('nx_pk_'+from,null);
         if(!pk)return;try{k=await deriveDMKey(pk);dmKeys.set(from,k);}catch(e){return;}}
@@ -1015,11 +1073,19 @@ async function handleIncoming(ctx,d){
   if(d.k==='ginv')return onGameInvite(ctx,d);
   if(d.k==='gacc')return onGameAccept(d);
   if(d.k==='gdec'){markInviteDone(d.gid,'Abgelehnt ✕');return;}
+  if(d.k==='shot'){
+    const isNew=await pushHist(ctx.hk,d);if(!isNew)return;
+    const open=$('scChat').classList.contains('active')&&chatId===ctx.ck;
+    if(open)sysMsg(shotTxt(d));
+    else addNoti(d.kind==='screenshot'?'📸':'🎥',
+      d.kind==='screenshot'?'Screenshot':'Bildschirmaufnahme',shotTxt(d),'pop');
+    return;}
   if(d.k!=='msg')return;
   const isNew=await pushHist(ctx.hk,d);if(!isNew)return;
   const open=$('scChat').classList.contains('active')&&chatId===ctx.ck;
   const p=d.type==='image'?'📷 Foto':d.type==='video'?'🎬 Video':d.type==='audio'?'🎙 Sprachnachricht':(d.text||'');
-  if(open){if(!seen.has(d.id)){seen.add(d.id);msgStore.set(d.id,d);bubble(d);sfx('chime');}}
+  if(open){typers.delete(d.u);
+    if(!seen.has(d.id)){seen.add(d.id);msgStore.set(d.id,d);bubble(d);sfx('chime');}}
   else{unread[ctx.ck]=(unread[ctx.ck]||0)+1;SS('nx_unread',unread);drawAll();
     addNoti('💬',ctx.kind==='dm'?d.u:('# '+ctx.id),
       (ctx.kind==='room'?d.u+': ':'')+p.slice(0,80),'chime');}}
@@ -1099,13 +1165,16 @@ function frSend(to,act){const t=NS+'/in/'+to+'/fr_'+me+'_'+act;
   const p=JSON.stringify({f:me,plain:1,fr:{k:'friend',a:act,from:me}});
   if(net&&net.connected)net.publish(t,p,{retain:true,qos:1});
   else{outbox.push({t,p,r:true});SS('nx_outbox',outbox);}}
-function sendRequest(){sfx('click');const n=$('addName').value.trim().toLowerCase();if(!n)return;
+function sendRequest(){sfx('click');const v=$('addName').value;if(!v.trim())return;
+  sendRequestTo(v);$('addName').value='';}
+function sendRequestTo(n){n=(n||'').trim().toLowerCase();
+  if(!/^[a-z0-9_]{3,16}$/.test(n))return toast('Ungültiger Name');
   if(n===me)return toast('Das bist du 🙂');
   if(friends.includes(n))return toast('Bereits Freund');
   if(reqOut.includes(n))return toast('Anfrage läuft');
   if(reqIn.includes(n))return acceptReq(n);
-  reqOut.push(n);SS('nx_reqout',reqOut);$('addName').value='';
-  frSend(n,'req');drawAll();sfx('sent');toast('Anfrage gesendet');}
+  reqOut.push(n);SS('nx_reqout',reqOut);
+  frSend(n,'req');drawAll();drawMembers();sfx('sent');toast('Anfrage an '+n+' gesendet');}
 function resendReq(){if(net&&net.connected)reqOut.forEach(n=>frSend(n,'req'));}
 function onFriendMsg(d){const a=d.a,from=d.from;if(!from||bans.includes(from))return;
   if(a==='req'){if(friends.includes(from))return frSend(from,'acc');
@@ -1114,17 +1183,17 @@ function onFriendMsg(d){const a=d.a,from=d.from;if(!from||bans.includes(from))re
   if(a==='acc'){reqOut=reqOut.filter(x=>x!==from);SS('nx_reqout',reqOut);
     if(!friends.includes(from)){friends.push(from);SS('nx_friends',friends);linkFriend(from);
       loadHistFor('h_dm_'+[me,from].sort().join('_'));
-      addNoti('✅','Neuer Freund',from+' hat deine Anfrage angenommen','win');}drawAll();}
+      addNoti('✅','Neuer Freund',from+' hat deine Anfrage angenommen','win');}drawAll();drawMembers();}
   if(a==='dec'){reqOut=reqOut.filter(x=>x!==from);SS('nx_reqout',reqOut);drawAll();}}
 function acceptReq(n){sfx('win');reqIn=reqIn.filter(x=>x!==n);SS('nx_reqin',reqIn);
   reqOut=reqOut.filter(x=>x!==n);SS('nx_reqout',reqOut);
   if(!friends.includes(n)){friends.push(n);SS('nx_friends',friends);linkFriend(n);
     loadHistFor('h_dm_'+[me,n].sort().join('_'));}
-  frSend(n,'acc');drawAll();toast('✅ '+n+' hinzugefügt');}
-function declineReq(n){sfx('click');reqIn=reqIn.filter(x=>x!==n);SS('nx_reqin',reqIn);frSend(n,'dec');drawAll();}
-function cancelOut(n){sfx('click');reqOut=reqOut.filter(x=>x!==n);SS('nx_reqout',reqOut);drawAll();}
+  frSend(n,'acc');drawAll();drawMembers();toast('✅ '+n+' hinzugefügt');}
+function declineReq(n){sfx('click');reqIn=reqIn.filter(x=>x!==n);SS('nx_reqin',reqIn);frSend(n,'dec');drawAll();drawMembers();}
+function cancelOut(n){sfx('click');reqOut=reqOut.filter(x=>x!==n);SS('nx_reqout',reqOut);drawAll();drawMembers();}
 function removeFriend(n){if(!confirm(n+' entfernen?'))return;
-  friends=friends.filter(f=>f!==n);SS('nx_friends',friends);drawAll();}
+  friends=friends.filter(f=>f!==n);SS('nx_friends',friends);drawAll();drawMembers();}
 
 /* ══ LISTEN ══ */
 function drawAll(){drawFriends();drawJoined();drawReqs();drawRooms();updateBadges();
@@ -1134,6 +1203,8 @@ function updateBadges(){const r=reqIn.length,t=totalUnread()+r;
   $('tabBadge').textContent=t>99?'99+':t;$('tabBadge').classList.toggle('on',t>0);
   document.title=t>0?'('+t+') Nexus':'Nexus Chat';}
 function prevOf(hk){const h=getHist(hk);if(!h.length)return null;const m=h[h.length-1];
+  if(m.k==='shot')return (m.u===me?'📸 Du':'📸 '+m.u)+' – '+
+    (m.kind==='screenshot'?'Screenshot':'Bildschirmaufnahme');
   const t=m.type==='image'?'📷 Foto':m.type==='video'?'🎬 Video':m.type==='audio'?'🎙 Sprachnachricht':m.text;
   return (m.u===me?'Du: ':m.u+': ')+(t||'');}
 function badgeEl(n){return n>0?`<span class="badge on">${n>99?'99+':n}</span>`:'';}
@@ -1221,7 +1292,7 @@ async function openDM(other){
   live({k:'pres',a:'join',prof:profile});renderRoomOpts();}
 function startChat(t){
   members.clear();members.set(me,{t:Date.now(),own:isRoomOwner,prof:profile});
-  seen.clear();msgStore.clear();rxStore.clear();
+  seen.clear();msgStore.clear();rxStore.clear();typers.clear();
   $('chTitle').textContent=t;
   $('msgs').querySelectorAll('.row,.sys,.divider,.invcard').forEach(e=>e.remove());
   $('muteBanner').classList.remove('on');
@@ -1235,11 +1306,12 @@ function renderHistory(){const h=getHist(histKey);
     e.textContent='Noch keine Nachrichten';$('msgs').appendChild(e);return;}
   const a=document.createElement('div');a.className='divider';
   a.textContent=h.length+' Nachricht'+(h.length>1?'en':'')+' im Verlauf';$('msgs').appendChild(a);
-  h.forEach(m=>{seen.add(m.id);msgStore.set(m.id,m);bubble(m,true);});
+  h.forEach(m=>{seen.add(m.id);msgStore.set(m.id,m);
+    if(m.k==='shot')sysMsg(shotTxt(m),true);else bubble(m,true);});
   setTimeout(()=>{$('msgs').scrollTop=$('msgs').scrollHeight;},40);}
 function leaveChat(){sfx('click');live({k:'pres',a:'left'});
   chatLive='';chatBox='';histKey='';chatRoomName='';chatKey=null;chatId='';chatMode='';
-  openDrawer(false);drawAll();show('scHome');pushStatus(true);}
+  typers.clear();openDrawer(false);drawAll();show('scHome');pushStatus(true);}
 function renderRoomOpts(){const el=$('roomOpts');const cnt=getHist(histKey).length;
   if(chatMode!=='room'){el.innerHTML=`<div class="sw"><div><div class="t">📬 Postfach aktiv</div>
     <div class="d">${cnt} Nachrichten gespeichert</div></div></div>
@@ -1293,8 +1365,16 @@ async function send(){if(iAmMuted){sfx('error');return toast('🔇 Stummgeschalt
   const ok=await store(d);
   if(!ok){const r=document.querySelector(`.row[data-id="${d.id}"]`);if(r)r.classList.add('pending');}
   i.value='';cancelReply();cancelAtt();tray.classList.remove('on');drawAll();}
-function showTyping(u){const s=$('chSub');s.textContent='✍️ '+u+' schreibt…';s.dataset.t='1';
-  clearTimeout(showTyping._t);showTyping._t=setTimeout(()=>{s.dataset.t='';updateSub();},2500);}
+function showTyping(u){typers.set(u,Date.now());updateSubTyping();}
+function updateSubTyping(){const s=$('chSub');
+  typers.forEach((ts,u)=>{if(Date.now()-ts>=3500)typers.delete(u);});
+  const act=[...typers.keys()];
+  if(!act.length){s.dataset.t='';updateSub();return;}
+  const names=act.map(u=>u===me?'Du':u);
+  s.textContent=names.length===1?'✍️ '+names[0]+' schreibt…'
+    :names.length===2?'✍️ '+names[0]+' und '+names[1]+' schreiben…'
+    :'✍️ '+names.slice(0,-1).join(', ')+' und '+names[names.length-1]+' schreiben…';
+  s.dataset.t='1';}
 function updateSub(){const s=$('chSub');if(s.dataset.t==='1')return;
   if(chatMode==='dm'){const i=users.get(chatPeer);
     s.textContent=i?i.st:'⚪️ Offline – wird zugestellt';}
@@ -1302,31 +1382,60 @@ function updateSub(){const s=$('chSub');if(s.dataset.t==='1')return;
 function drawMembers(){const el=$('memList');if(!el)return;el.innerHTML='';
   [...members.keys()].sort().forEach(u=>{const i=members.get(u)||{},mu=mutedUsers.has(u);
     const inf=users.get(u);
-    const d=document.createElement('div');d.className='item';
+    const d=document.createElement('div');d.className='item';d.style.cursor='pointer';
     d.innerHTML=avHTML(i.prof||(inf&&inf.prof))+
       `<div class="meta"><h4>${i.own?'👑 ':''}${esc(u)}${u===me?' (Du)':''}${mu?' 🔇':''}</h4>
       <span class="st">${esc(u===me?lastStatus:(inf?inf.st:'🟢 Online'))}</span></div>`;
+    if(u!==me&&!friends.includes(u)&&!reqOut.includes(u)&&!reqIn.includes(u)){
+      const b0=document.createElement('button');b0.className='pill green';b0.textContent='➕';
+      b0.title='Als Freund hinzufügen';
+      b0.onclick=e=>{e.stopPropagation();sfx('click');sendRequestTo(u);};
+      d.appendChild(b0);}
     if(isRoomOwner&&u!==me&&chatMode==='room'){
       const b1=document.createElement('button');b1.className='pill gray';b1.textContent=mu?'🔊':'🔇';
-      b1.onclick=()=>{sfx('click');live({k:'mute',user:u,on:!mu});};
+      b1.onclick=e=>{e.stopPropagation();sfx('click');live({k:'mute',user:u,on:!mu});};
       const b2=document.createElement('button');b2.className='pill red';b2.textContent='👢';
-      b2.onclick=()=>{if(confirm(u+' kicken?'))live({k:'kickroom',user:u});};
+      b2.onclick=e=>{e.stopPropagation();if(confirm(u+' kicken?'))live({k:'kickroom',user:u});};
       d.appendChild(b1);d.appendChild(b2);}
-    else{const t=document.createElement('div');t.className='dot';d.appendChild(t);}
+    else if(u!==me){const t=document.createElement('div');t.className='dot';d.appendChild(t);}
+    d.onclick=()=>{sfx('click');memberAction(u);};
     el.appendChild(d);});}
+function memberAction(u){
+  const inf=users.get(u),i=members.get(u)||{};
+  const st=u===me?lastStatus:(inf?inf.st:'🟢 Online');
+  const isFr=friends.includes(u),pendOut=reqOut.includes(u),pendIn=reqIn.includes(u);
+  let act='';
+  if(u!==me){
+    if(isFr)act='<button class="btn ghost" disabled>✅ Bereits befreundet</button>';
+    else if(pendOut)act=`<button class="btn ghost" onclick="sfx('click');closeModal();cancelOut('${u}')">⏳ Anfrage ausstehend – abbrechen</button>`;
+    else if(pendIn)act=`<button class="btn green" onclick="sfx('win');closeModal();acceptReq('${u}')">✓ Freundschaftsanfrage annehmen</button>`;
+    else act=`<button class="btn green" onclick="sfx('click');closeModal();sendRequestTo('${u}')">➕ Als Freund hinzufügen</button>`;
+  }
+  $('modalCard').innerHTML=`<div style="text-align:center;">${avHTML(i.prof||(inf&&inf.prof),'big')}</div>
+    <div class="logo" style="font-size:21px;margin-top:10px;">${esc(u)}${u===me?' (Du)':''}</div>
+    <div class="sub">${esc(st)}${i.own?' · 👑 Raum-Admin':''}</div>
+    ${u===me?'':`<button class="btn" onclick="sfx('click');closeModal();openDM('${u}')">💬 Privaten Chat öffnen</button>`+act}
+    <button class="btn ghost" onclick="closeModal()">Schließen</button>`;
+  $('modal').classList.add('on');}
 function openDrawer(b){if(b)sfx('click');$('drawer').classList.toggle('on',b);if(b)renderRoomOpts();}
-function sysMsg(t){const b=$('msgs'),d=document.createElement('div');
-  d.className='sys';d.textContent=t;b.appendChild(d);b.scrollTop=b.scrollHeight;}
+function sysMsg(t,quiet){const b=$('msgs'),d=document.createElement('div');
+  d.className='sys';d.textContent=t;b.appendChild(d);if(!quiet)b.scrollTop=b.scrollHeight;}
 
 /* ══ BUBBLES ══ */
 function bubble(d,old){const box=$('msgs'),mine=d.u===me,r=document.createElement('div');
   r.className='row '+(mine?'me':'you')+(old?' nofx':'');r.dataset.id=d.id;
+  r.dataset.uid=d.u;
+  const prevRow=box.lastElementChild;
+  const grp=!mine&&chatMode==='room'&&!d.re&&prevRow&&prevRow.dataset&&prevRow.dataset.uid===d.u;
+  if(grp)r.classList.add('grp');
   let q=d.re?`<div class="quote"><b>${esc(d.re.u)}</b>${esc(d.re.t)}</div>`:'';
   let m='',prev=d.text||'Anhang';
   if(d.type==='image')m=`<img src="${d.media}" onclick="openLB('image','${d.id}')">`;
   else if(d.type==='video')m=`<video src="${d.media}" playsinline onclick="openLB('video','${d.id}')"></video>`;
   else if(d.type==='audio'){prev='🎙 Sprachnachricht';m=voicePlayerHTML(d.id);}
-  const av=!mine&&chatMode==='room'?`<div class="who">${(d.prof&&d.prof.av)||'👤'} ${esc(d.u)} · ${d.ts}</div>`:'';
+  const miniAv=p=>`<span class="mini-av">${p&&p.pic?`<img src="${p.pic}">`:(p&&p.av)||'👤'}</span>`;
+  const av=!mine&&chatMode==='room'&&!grp?
+    `<div class="who">${miniAv(d.prof)}<b>${esc(d.u)}</b>· ${d.ts}</div>`:'';
   r.innerHTML=`${av}<div class="bwrap"><div class="bub">${q}
     ${d.text?`<div>${esc(d.text)}</div>`:''}${m}<div class="stamp">${d.ts||''}</div></div>
     <button class="rbtn">↩︎</button></div><div class="rxrow"></div>`;

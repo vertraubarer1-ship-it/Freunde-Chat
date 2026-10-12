@@ -1,0 +1,21 @@
+{
+  "name": "freunde-chat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nexus Chat – E2EE-Chat als PWA (Chat, Freunde, Spiele, Admin)",
+  "scripts": {
+    "test": "node --test tests/games.test.mjs tests/qr.test.mjs tests/e2e.test.mjs",
+    "test:games": "node --test tests/games.test.mjs",
+    "test:qr": "node --test tests/qr.test.mjs",
+    "test:e2e": "node --test tests/e2e.test.mjs",
+    "icons": "bash tools/make-icons.sh",
+    "serve": "node tools/serve.mjs",
+    "test:all": "bash tools/test.sh"
+  },
+  "devDependencies": {
+    "jsdom": "^30.0.0",
+    "jsqr": "^1.4.0",
+    "pngjs": "^7.0.0"
+  },
+  "license": "MIT"
+}

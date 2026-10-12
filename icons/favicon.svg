@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Nexus Chat">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="120" ry="120" fill="url(#g)"/>
+  <path d="M172 124h168a44 44 0 0 1 44 44v88a44 44 0 0 1-44 44H216l-44 44v-44h0a44 44 0 0 1-44-44v-88a44 44 0 0 1 44-44z" fill="#ffffff"/>
+  <path d="M196 176h34l52 62v-62h34v104h-32l-54-64v64h-34z" fill="#1e1b4b"/>
+</svg>
